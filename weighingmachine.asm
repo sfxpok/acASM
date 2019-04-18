@@ -4,10 +4,17 @@ SEL_NR_MENU                 EQU 70H     ; selection input
 OK                          EQU 80H     ; confirmation of the user input
 CHANGE                      EQU 90H     ; switch selection
 PESO                        EQU 100H    ; weight input of a food
+; stack pointer
+STACK_POINTER               EQU 9FF0H
 ; main menu constants
 WEIGHT_MACHINE EQU 1
 VIEW_FOOD EQU 2
 RESET_DATA EQU 3
+; error menu constants
+GO_BACK EQU 1
+; other constants
+MAX_WEIGHT                  EQU BB8H    ; 3000 in hexadecimal
+
 ; display
 DISPLAY_START               EQU 20H     ; memory position to start the display
 DISPLAY_END                 EQU 27H     ; memory position to shut down the display
@@ -68,11 +75,20 @@ Init:
   MOV R0, Startup
   JMP R0
 
+PLACE 600H
+Startup:
+  MOV SP, STACK_POINTER                 ; set stack pointer ready
+StartupLoop:
+  CALL waitForPower                     ; check if power is on
+  CALL main                             ; display main menu
+  CALL IsOKActive
+  JMP StartupLoop                       ; repeat routine
+
 waitForPower:
   PUSH R0
   PUSH R1
 waitForPowerLoop:
-  MOV R0, PWR                           ; move PWR value to memory
+  MOV R0, PWR                           ; move PWR value to register bank
   MOVB R1, [R0]
   CMP R1, 1                             ; is PWR set to 1?
   JNE waitForPower                      ; PWR != 1?
@@ -80,16 +96,22 @@ waitForPowerLoop:
   POP R0
   RET
 
-Startup:
-  MOV SP, StackPointer                  ; set stack pointer ready
-StartupLoop:
-  CALL waitForPower                     ; check if power is on
-  CALL RMain                            ; display main menu
-  CALL IsOKActive
-  JMP StartupLoop                       ; repeat routine
-
-
 errorMessage:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+errorMessageLoop:
+  MOV R2, ErrorMenu                     ; display error menu
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL IsOKActive                       ; is ok being pressed
+  MOV R0, SEL_NR_MENU                   ; move selection value to register bank
+  MOVB R1, [R0]
+  CMP R1, GO_BACK                       ; is selection set to 1?
+  JNE errorMessageLoop                  ; SEL_NR_MENU != 1?
+  POP R2
+  POP R1
+  POP R0
 
 main:
   PUSH R0
@@ -100,13 +122,13 @@ mainLoop:
   CALL drawDisplay                      ; draw display
   CALL wipePeripherals
   CALL IsOKActive
-  MOV R0, SEL_NR_MENU                   ; move selection value to memory
+  MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
-  CMP R1, WEIGHT_MACHINE
+  CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
   JEQ mainLoop_weighFood
-  CMP R1, VIEW_FOOD
+  CMP R1, VIEW_FOOD                     ; is selection set to 2?
   JEQ mainLoop_viewFoodInfo
-  CMP R1, RESET_DATA
+  CMP R1, RESET_DATA                    ; is selection set to 3?
   JEQ mainLoop_resetFoodData
   CALL errorMessage
   JMP mainLoop
@@ -119,25 +141,44 @@ mainLoop_viewFoodInfo:
 mainLoop_resetFoodData:
   CALL resetFoodData
   JMP mainLoop
-;mainLoop_end:
-;weighFood:
-;viewFoodInfo:
-;resetFoodData:
+mainLoop_end:
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+weighFood:
+viewFoodInfo:
+resetFoodData:
 ;roundGrams:
 ;checkIfFoodIsSelected:
-;checkIfAboveMaxWeight:
+
+checkIfAboveMaxWeight:
+  PUSH R0
+  MOV R0, [R10]                         ; weight of the food
+  CMP R0, MAX_WEIGHT
+  JLT checkIfAboveMaxWeight_End
+  MOV [R10], 0                          ; weight is above 3000, therefore, set weight to 0
+checkIfAboveMaxWeight_End:
+  POP R0
+  POP R1
+  RET
+
 ;calculateCalories:
-;wipeDisplay:
+
+
 drawDisplay:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
   MOV R0, DISPLAY_START                 ; beginning of display
   MOV R1, DISPLAY_END                   ; end of display
-;checkIfPowerIsOn:
 ;drawDisplayLoop:
+
 IsOKActive:
   PUSH R0
   PUSH R1
-
-
 IsOKActiveLoop:
   MOV R0, OK
   MOVB R1, [R0]
@@ -146,7 +187,6 @@ IsOKActiveLoop:
   POP R1
   POP R0
   RET
-
 
 wipePeripherals:
   PUSH R0
@@ -161,11 +201,11 @@ wipePeripherals:
   MOV R3, CHANGE
   MOV R4, PESO
   MOV R5, 0
-  MOVB [R0], R5
-  MOVB [R1], R5
-  MOVB [R2], R5
-  MOVB [R3], R5
-  MOV [R4], R5
+  MOVB [R0], R5                         ; wipe PWR input
+  MOVB [R1], R5                         ; wipe selection input
+  MOVB [R2], R5                         ; wipe OK input
+  MOVB [R3], R5                         ; wipe CHANGE input
+  MOV [R4], R5                          ; wipe PESO input
   MOV [R4+2], R5
   MOV [R4+4], R5
   MOV [R4+6], R5
