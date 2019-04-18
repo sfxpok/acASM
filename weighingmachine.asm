@@ -1,9 +1,9 @@
 ; peripherals
-PWR                         EQU 0A0H    ; start machine
-SEL_NR_MENU                 EQU 0B0H    ; selection input
-OK                          EQU 0C0H    ; confirmation of the user input
-CHANGE                      EQU 0D0H    ; switch selection
-PESO                        EQU 0E0H    ; weight input of a food
+PWR                         EQU 60H     ; start machine
+SEL_NR_MENU                 EQU 70H     ; selection input
+OK                          EQU 80H     ; confirmation of the user input
+CHANGE                      EQU 90H     ; switch selection
+PESO                        EQU 100H    ; weight input of a food
 ; display
 DISPLAY_START               EQU 20H     ; memory position to start the display
 DISPLAY_END                 EQU 27H     ; memory position to shut down the display
@@ -61,11 +61,54 @@ ChangeFoodMenu1:
 
 PLACE 0000H
 Init:
-  MOV R0, InitMenu
+  MOV R0, Startup
   JMP R0
+
+Startup:
+  MOV SP, StackPointer                  ; set stack pointer ready
+StartupLoop:
+  CALL RMain                            ; display main menu
+  JMP StartupLoop                       ; repeat routine
+
+RMain:
+  MOV R2, InitMenu                      ; get main menu ready
+  CALL drawDisplay                      ; draw display
 
 ;roundGrams:
 ;checkIfFoodIsSelected:
 ;checkIfAboveMaxWeight:
 ;calculateCalories:
 ;wipeDisplay:
+drawDisplay:
+  MOV R0, DISPLAY_START                 ; beginning of display
+  MOV R1, DISPLAY_END                   ; end of display
+;checkIfPowerIsOn:
+;drawDisplayLoop:
+wipePeripherals:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  MOV R0, PWR
+  MOV R1, SEL_NR_MENU
+  MOV R2, OK
+  MOV R3, CHANGE
+  MOV R4, PESO
+  MOV R5, 0
+  MOVB [R0], R5
+  MOVB [R1], R5
+  MOVB [R2], R5
+  MOVB [R3], R5
+  MOV [R4], R5
+  MOV [R4+2], R5
+  MOV [R4+4], R5
+  MOV [R4+6], R5
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  POP R0
+  RET
