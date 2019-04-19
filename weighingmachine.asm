@@ -211,7 +211,6 @@ calculateCalories:
   POP R0
   RET
 
-
 drawDisplay:
   PUSH R0
   PUSH R1
@@ -219,7 +218,30 @@ drawDisplay:
   PUSH R3
   MOV R0, DISPLAY_START                 ; beginning of display
   MOV R1, DISPLAY_END                   ; end of display
-;drawDisplayLoop:
+drawDisplayLoop:
+  MOV R3, [R2]
+  MOV [R0], R3
+  ADD R2, 2
+  ADD R0, 2
+  CMP R0, R1
+  JLE drawDisplayLoop
+  POP R3
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+IsCHANGEActive:
+  PUSH R0
+  PUSH R1
+IsCHANGEActiveLoop:
+  MOV R0, CHANGE
+  MOVB R1, [R0]
+  CMP R1, 1
+  JNE IsCHANGEActiveLoop
+  POP R1
+  POP R0
+  RET
 
 IsOKActive:
   PUSH R0
