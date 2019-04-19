@@ -10,6 +10,8 @@ STACK_POINTER               EQU 9FF0H
 WEIGHT_MACHINE              EQU 1
 VIEW_FOOD                   EQU 2
 RESET_DATA                  EQU 3
+; weigh food constants
+CHANGE_FOOD                 EQU 2
 ; error menu constants
 GO_BACK                     EQU 1
 ; page 1 of food constants
@@ -23,6 +25,8 @@ MAX_WEIGHT                  EQU 3000    ; 3000 in hexadecimal
 PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
 FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
+; storage
+WEIGHT                      EQU 120H    ; weight input stored
 
 ; display
 DISPLAY_START               EQU 0A0H     ; position to start the display
@@ -71,9 +75,9 @@ weighMenu:
   STRING "Alimento:       "
   STRING "Peso:           "
   STRING "                "
-  STRING "                "
-  STRING "                "
-  STRING "                "
+  STRING "1: OK           "
+  STRING "2: Muda alimento"
+  STRING "3: Muda peso    " ; unsure...
   STRING "                "
 viewFoodInfoMenu:
   STRING "Alimento:       "
@@ -206,6 +210,17 @@ IsCHANGEActiveLoop:
   POP R0
   RET
 
+changeFood1: ; TO BE DONE
+  PUSH R0
+  PUSH R1
+changeFood1Loop:
+  MOV R2, ChangeFoodMenu1
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL IsOKActive
+  MOV R0, SEL_NR_MENU
+  MOVB R1, [R0]
+
 weighFood: ; TO BE DONE
   PUSH R0
   PUSH R1
@@ -214,7 +229,19 @@ weighFoodLoop:
   MOV R2, weighMenu
   CALL drawDisplay
   CALL wipePeripherals
+  CALL IsOKActive
+  MOV R0, SEL_NR_MENU
+  MOVB R1, [R0]
+  CMP R1, GO_BACK
+  JEQ main
+  CMP R1, CHANGE_FOOD
+  JEQ weighFoodLoop_CHANGE
+  CALL errorMessage
+  JMP weighFoodLoop
+weighFoodLoop_CHANGE:
   CALL IsCHANGEActive
+  CALL changeFood1
+  RET
 
 viewFoodInfo:
   PUSH R0
@@ -256,9 +283,12 @@ calculateCalories:
   POP R0
   RET
 
-resetFoodData:
+resetFoodData: ; TO BE DONE
+  PUSH R0
+  PUSH R1
 
 ;roundGrams:
+
 checkIfFoodIsSelected:
   PUSH R0
   ;PUSH R1
