@@ -12,6 +12,12 @@ VIEW_FOOD                   EQU 2
 RESET_DATA                  EQU 3
 ; error menu constants
 GO_BACK                     EQU 1
+; page 1 of food constants
+AVEIA                       EQU 1
+PAO_FORMA                   EQU 2
+BATATA                      EQU 3
+ARROZ                       EQU 4
+CHANGE_PAGE                 EQU 0
 ; other constants
 MAX_WEIGHT                  EQU 3000    ; 3000 in hexadecimal
 PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
@@ -24,6 +30,7 @@ DISPLAY_END                 EQU 10FH     ; position to shut down the display
 
 ; reserved registers
 ; R10: weight of the food
+; R9: selected food
 
 ; display menus
 PLACE 1000H
@@ -44,6 +51,14 @@ ErrorMenu:
   STRING "                "
   STRING "1: OK           "
   STRING "                "
+ErrorNoFoodSelectedMenu:
+  STRING "                "
+  STRING " Nao ha nenhum  "
+  STRING "   alimento     "
+  STRING "  selecionado   "
+  STRING "                "
+  STRING "1: OK           "
+  STRING "                "
 ResetMenu:
   STRING "                "
   STRING "                "
@@ -60,7 +75,14 @@ weighMenu:
   STRING "                "
   STRING "                "
   STRING "                "
-
+viewFoodInfoMenu:
+  STRING "Alimento:       "
+  STRING "Proteínas:      "
+  STRING "Hidr. Carb:     "
+  STRING "Gorduras:       "
+  STRING "                "
+  STRING "1: OK           "
+  STRING "                "
 
 ChangeFoodMenu1:
   STRING "Selec.Alim. P1/6"
@@ -120,6 +142,24 @@ errorMessageLoop:
   POP R1
   POP R0
 
+errorMessageNoFoodSelected:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+errorMessageNoFoodSelectedLoop:
+  MOV R2, ErrorNoFoodSelectedMenu       ; display error menu (no food selected)
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL IsOKActive                       ; is ok being pressed
+  MOV R0, SEL_NR_MENU                   ; move selection value to register bank
+  MOVB R1, [R0]
+  CMP R1, GO_BACK                       ; is selection set to 1?
+  JNE errorMessageNoFoodSelectedLoop    ; SEL_NR_MENU != 1?
+  POP R2
+  POP R1
+  POP R0
+  JMP main
+
 main:
   PUSH R0
   PUSH R1
@@ -154,12 +194,79 @@ mainLoop_end:
   POP R0
   RET
 
-weighFood:
+IsCHANGEActive:
+  PUSH R0
+  PUSH R1
+IsCHANGEActiveLoop:
+  MOV R0, CHANGE                        ; move CHANGE value to register bank
+  MOVB R1, [R0]                         ; move CHANGE value to memory
+  CMP R1, 1                             ; is CHANGE pressed?
+  JNE IsCHANGEActiveLoop                ; CHANGE != 1?
+  POP R1
+  POP R0
+  RET
+
+weighFood: ; TO BE DONE
+  PUSH R0
+  PUSH R1
+  PUSH R2
+weighFoodLoop:
+  MOV R2, weighMenu
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL IsCHANGEActive
+
 viewFoodInfo:
+  PUSH R0
+  PUSH R1
+viewFoodInfoLoop:
+  CALL checkIfFoodIsSelected            ; is a food selected?
+  MOV R2, viewFoodInfoMenu
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL calculateCalories                ; calculate food's calories
+  CALL IsOKActive                       ; is OK being pressed?
+  MOV R0, SEL_NR_MENU
+  MOVB R1, [R0]
+  CMP R1, GO_BACK
+  JEQ main
+  CALL errorMessage
+  JMP viewFoodInfoLoop
+
+calculateCalories:
+  PUSH R0
+  PUSH R1
+  PUSH R6
+  PUSH R7
+  PUSH R8
+  PUSH R9
+  MOV R0, PROTEIN_CARB_MULTIPLICAND
+  MOV R1, FAT_MULTIPLICAND
+  MUL R0, R6                            ; protein * 4
+  MUL R0, R7                            ; carbs * 4
+  MUL R1, R8                            ; fat * 9
+  ADD R9, R6                            ; kcal + protein_kcal
+  ADD R9, R7                            ; kcal + protein_carbs
+  ADD R9, R8                            ; kcal + protein_fat
+  POP R9
+  POP R8
+  POP R7
+  POP R6
+  POP R1
+  POP R0
+  RET
+
 resetFoodData:
 
 ;roundGrams:
-;checkIfFoodIsSelected:
+checkIfFoodIsSelected:
+  PUSH R0
+  ;PUSH R1
+  MOV R0, [R9]                          ; get food in R9
+  JZ errorMessageNoFoodSelected         ; is food set to 0? (does it NOT exist?)
+  ;POP R1
+  POP R0
+  RET
 
 checkIfOverflow:
   PUSH R0
@@ -179,7 +286,7 @@ checkIfOverflow:
 checkIfAboveMaxWeight:
   PUSH R0
   PUSH R1
-  MOV R0, [R10]                         ; weight of the food
+  MOV R0, [R10]                         ; get weight of the food from R10
   MOV R1, MAX_WEIGHT
   CMP R0, R1
   JLT checkIfAboveMaxWeight_End
@@ -188,31 +295,6 @@ checkIfAboveMaxWeight:
 checkIfAboveMaxWeight_End:
   POP R0
   POP R1
-  RET
-
-calculateCalories:
-  PUSH R0
-  PUSH R1
-  PUSH R6
-  PUSH R7
-  PUSH R8
-  PUSH R9
-  MOV R0, PROTEIN_CARB_MULTIPLICAND
-  MOV R1, FAT_MULTIPLICAND
-  MUL R0, R6                            ; protein * 4
-  MUL R0, R7                            ; carbs * 4
-  MUL R1, R8                            ; fat * 9
-
-  ADD R9, R6                            ; kcal + protein_kcal
-  ADD R9, R7                            ; kcal + protein_carbs
-  ADD R9, R8                            ; kcal + protein_fat
-
-  POP R9
-  POP R8
-  POP R7
-  POP R6
-  POP R1
-  POP R0
   RET
 
 drawDisplay:
@@ -254,18 +336,6 @@ wipeDisplayLoop:
   POP R0
   RET
 
-IsCHANGEActive:
-  PUSH R0
-  PUSH R1
-IsCHANGEActiveLoop:
-  MOV R0, CHANGE                        ; move CHANGE value to register bank
-  MOVB R1, [R0]                         ; move CHANGE value to memory
-  CMP R1, 1                             ; is CHANGE pressed?
-  JNE IsCHANGEActiveLoop                ; CHANGE != 1?
-  POP R1
-  POP R0
-  RET
-
 IsOKActive:
   PUSH R0
   PUSH R1
@@ -291,7 +361,7 @@ wipePeripherals:
   MOV R3, CHANGE
   MOV R4, PESO
   MOV R5, 0
-  ;MOVB [R0], R5                         ; wipe PWR input
+  ;MOVB [R0], R5                        ; wipe PWR input
   MOVB [R1], R5                         ; wipe selection input
   MOVB [R2], R5                         ; wipe OK input
   MOVB [R3], R5                         ; wipe CHANGE input
