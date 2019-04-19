@@ -7,17 +7,23 @@ PESO                        EQU 100H    ; weight input of a food
 ; stack pointer
 STACK_POINTER               EQU 9FF0H
 ; main menu constants
-WEIGHT_MACHINE EQU 1
-VIEW_FOOD EQU 2
-RESET_DATA EQU 3
+WEIGHT_MACHINE              EQU 1
+VIEW_FOOD                   EQU 2
+RESET_DATA                  EQU 3
 ; error menu constants
-GO_BACK EQU 1
+GO_BACK                     EQU 1
 ; other constants
 MAX_WEIGHT                  EQU BB8H    ; 3000 in hexadecimal
+PROTEIN_CARB_MULTIPLICAND   EQU 4
+FAT_MULTIPLICAND            EQU 9
 
 ; display
 DISPLAY_START               EQU 20H     ; memory position to start the display
 DISPLAY_END                 EQU 27H     ; memory position to shut down the display
+
+; reserved registers
+; R10: weight of the food
+
 ; display menus
 PLACE 1000H
 
@@ -152,19 +158,58 @@ viewFoodInfo:
 resetFoodData:
 ;roundGrams:
 ;checkIfFoodIsSelected:
+checkIfOverflow:
+  PUSH R0
+  ;PUSH R1
+  MOV R0, R6                            ; R6 - P
+  JV errorMessage
+  MOV R0, R7                            ; R7 - C
+  JV errorMessage
+  MOV R0, R8                            ; R8 - F
+  JV errorMessage
+  MOV R0, R9                            ; R9 - K
+  JV errorMessage
+  ;POP R1
+  POP R0
+  RET
+
 
 checkIfAboveMaxWeight:
   PUSH R0
+  ;PUSH R1
   MOV R0, [R10]                         ; weight of the food
   CMP R0, MAX_WEIGHT
   JLT checkIfAboveMaxWeight_End
   MOV [R10], 0                          ; weight is above 3000, therefore, set weight to 0
 checkIfAboveMaxWeight_End:
   POP R0
-  POP R1
+  ;POP R1
   RET
 
-;calculateCalories:
+calculateCalories:
+  PUSH R0
+  PUSH R1
+  PUSH R6
+  PUSH R7
+  PUSH R8
+  PUSH R9
+  MOV R0, PROTEIN_CARB_MULTIPLICAND
+  MOV R1, FAT_MULTIPLICAND
+  MUL R0, R6                            ; protein * 4
+  MUL R0, R7                            ; carbs * 4
+  MUL R1, R8                            ; fat * 9
+
+  ADD R9, R6                            ; kcal + protein_kcal
+  ADD R9, R7                            ; kcal + protein_carbs
+  ADD R9, R8                            ; kcal + protein_fat
+
+  POP R9
+  POP R8
+  POP R7
+  POP R6
+  POP R1
+  POP R0
+  RET
 
 
 drawDisplay:
