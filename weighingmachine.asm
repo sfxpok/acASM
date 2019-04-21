@@ -31,6 +31,8 @@ GO_BACK                     EQU 1
 SELECTED_FOOD               EQU 130H    ; selected food during runtime
 SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
 
+BASE_DIARY_FOOD             EQU 1000H   ; base address of the food diary
+
 ; display
 DISPLAY_START               EQU 0A0H     ; position to start the display
 DISPLAY_END                 EQU 10FH     ; position to shut down the display
@@ -113,12 +115,12 @@ ChangeFoodMenuOne:
   STRING "3: Batata       "
   STRING "4: Arroz        "
   STRING "0: Pagina 2     "
-;ChangeFoodMenu2:
-;ChangeFoodMenu3:
-;ChangeFoodMenu4:
-;ChangeFoodMenu5:
-;ChangeFoodMenu6:
-;ChangeFoodMenu7:
+;ChangeFoodMenuTwo:
+;ChangeFoodMenuThree:
+;ChangeFoodMenuFour:
+;ChangeFoodMenuFive:
+;ChangeFoodMenuSix:
+;ChangeFoodMenuSeven:
 
 PLACE 200H
 Init:
@@ -216,7 +218,7 @@ errorMessageNoWeightSelectedLoop:
   MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
   CMP R1, GO_BACK                       ; is selection set to 1?
-  JNE errorMessageNoWeightSelectedLoop    ; SEL_NR_MENU != 1?
+  JNE errorMessageNoWeightSelectedLoop  ; SEL_NR_MENU != 1?
   POP R2
   POP R1
   POP R0
@@ -235,7 +237,7 @@ mainLoop:
   MOVB R1, [R0]
   CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
   JEQ mainLoop_registerFoodDiary
-  CMP R1, VIEW_TOTAL_DATA                     ; is selection set to 2?
+  CMP R1, VIEW_TOTAL_DATA               ; is selection set to 2?
   JEQ mainLoop_viewTotalData
   CALL errorMessage
   JMP mainLoop
@@ -293,23 +295,25 @@ registerFoodDiaryLoop:
   MOV R2, registerFoodDiaryMenu
   CALL drawDisplay
   CALL wipePeripherals
-  CALL checkIfFoodIsSelected
   CALL IsOKActive
   MOV R0, SEL_NR_MENU
   MOVB R1, [R0]
   CMP R1, GO_BACK
   JEQ main
   CMP R1, REGISTER_FOOD
-  JEQ registerFoodDiarySave
+  JEQ registerFoodDiaryLoop_SAVE
   CMP R1, UPDATE_WEIGHT
   JEQ drawDisplayWeight
   CMP R1, SELECT_FOOD
   JEQ registerFoodDiaryLoop_CHANGE
   CALL errorMessage
   JMP registerFoodDiaryLoop
-registerFoodDiarySave:
+registerFoodDiaryLoop_SAVE:
+  CALL checkIfFoodIsSelected
+  CALL checkIfWeightIsSelected
   CALL checkIfOverflow
   CALL calculateCalories
+  RET
 registerFoodDiaryLoop_CHANGE:
   CALL IsCHANGEActive
   CALL changeFoodOne
@@ -319,7 +323,6 @@ viewTotalData: ; TO BE DONE
   PUSH R0
   PUSH R1
 viewTotalDataLoop:
-  CALL checkIfFoodIsSelected            ; is a food selected?
   MOV R2, viewTotalDataMenu
   CALL drawDisplay
   CALL wipePeripherals
@@ -332,7 +335,7 @@ viewTotalDataLoop:
   CALL errorMessage
   JMP viewTotalDataLoop
 
-calculateCalories:
+calculateCalories: ; TO BE DONE
   PUSH R0
   PUSH R1
   PUSH R6
@@ -474,7 +477,7 @@ wipePeripherals:
   MOVB [R1], R5                         ; wipe selection input
   MOVB [R2], R5                         ; wipe OK input
   MOVB [R3], R5                         ; wipe CHANGE input
-  ;MOV [R4], R5                          ; wipe PESO input
+  ;MOV [R4], R5                         ; wipe PESO input
   ;MOV [R4+2], R5
   ;MOV [R4+4], R5
   ;MOV [R4+6], R5
