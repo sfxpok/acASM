@@ -8,16 +8,14 @@ PESO                        EQU 40H     ; weight input of a food
 STACK_POINTER               EQU 9FF0H
 ; main menu constants
 WEIGHT_MACHINE              EQU 1
-VIEW_FOOD                   EQU 2
-RESET_DATA                  EQU 3
-SELECT_FOOD                 EQU 4
-; weigh food constants
-;CHANGE_FOOD                 EQU 2
+VIEW_TOTAL_DATA             EQU 2
+; register food diary menu constants
 REGISTER_FOOD               EQU 2
 UPDATE_WEIGHT               EQU 3
-; error menu constants
-GO_BACK                     EQU 1
-; page 1 of food constants
+CHANGE_FOOD                 EQU 4
+; view total data menu constants
+RESET_DATA                  EQU 2
+; page 1 menu of food constants
 AVEIA                       EQU 1
 PAO_FORMA                   EQU 2
 BATATA                      EQU 3
@@ -28,6 +26,7 @@ MAX_WEIGHT                  EQU 3000    ; 3000 in hexadecimal
 PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
 FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
+GO_BACK                     EQU 1
 ; storage
 SELECTED_FOOD               EQU 130H    ; selected food during runtime
 SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
@@ -50,10 +49,10 @@ InitMenu:
   STRING "    WMachine    "
   STRING "                "
   STRING "1: Balanca      "
-  STRING "2: Visualizacao "
-  STRING "3: Reiniciar    "
-  STRING "4: Selec.Alim.  "
-  STRING "5: Selec. Peso  "
+  STRING "2: Ver diário   "
+  STRING "                "
+  STRING "                "
+  STRING "                "
 ErrorMenu:
   STRING "                "
   STRING "                "
@@ -85,16 +84,15 @@ registerFoodDiaryMenu:
   STRING "1: OK           "
   STRING "2: Regista      "
   STRING "3: Atualiza Peso"
-  STRING "                "
-viewFoodInfoMenu:
-  STRING "Alimento:       "
+  STRING "4: Selec. Alim. "
+viewTotalDataMenu:
   STRING "Proteinas:      "
   STRING "Hidr. Carb:     "
   STRING "Gorduras:       "
+  STRING "Calorias:       "
   STRING "                "
   STRING "1: OK           "
-  STRING "                "
-
+  STRING "2: Reiniciar    "
 ChangeFoodMenu1:
   STRING "Selec.Alim. P1/6"
   STRING "                "
@@ -196,26 +194,15 @@ mainLoop:
   MOVB R1, [R0]
   CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
   JEQ mainLoop_registerFoodDiary
-  CMP R1, VIEW_FOOD                     ; is selection set to 2?
-  JEQ mainLoop_viewFoodInfo
-  CMP R1, RESET_DATA                    ; is selection set to 3?
-  JEQ mainLoop_resetFoodData
-  CMP R1, SELECT_FOOD
-  JEQ mainLoop_changeFood1
+  CMP R1, VIEW_TOTAL_DATA                     ; is selection set to 2?
+  JEQ mainLoop_viewTotalData
   CALL errorMessage
   JMP mainLoop
 mainLoop_registerFoodDiary:
   CALL registerFoodDiary
   JMP mainLoop
-mainLoop_viewFoodInfo:
-  CALL viewFoodInfo
-  JMP mainLoop
-mainLoop_resetFoodData:
-  CALL resetFoodData
-  JMP mainLoop
-mainLoop_changeFood1:
-  CALL IsCHANGEActive
-  CALL changeFood1
+mainLoop_viewTotalData:
+  CALL viewTotalData
   JMP mainLoop
 mainLoop_end:
   POP R2
@@ -235,7 +222,7 @@ IsCHANGEActiveLoop:
   POP R0
   RET
 
-changeFood1: ; TO BE DONE
+changeFood1:
   PUSH R0
   PUSH R1
   PUSH R9
@@ -271,27 +258,28 @@ registerFoodDiaryLoop:
   MOVB R1, [R0]
   CMP R1, GO_BACK
   JEQ main
-  ;CMP R1, CHANGE_FOOD
-  ;JEQ registerFoodDiaryLoop_CHANGE
   CMP R1, REGISTER_FOOD
   JEQ registerFoodDiarySave
   CMP R1, UPDATE_WEIGHT
   JEQ drawDisplayWeight
+  CMP R1, SELECT_FOOD
+  JEQ changeFood1
   CALL errorMessage
   JMP registerFoodDiaryLoop
 registerFoodDiarySave:
-  ;CALL checkIfOverflow
+  CALL checkIfOverflow
+  CALL calculateCalories
 registerFoodDiaryLoop_CHANGE:
   CALL IsCHANGEActive
   CALL changeFood1
   RET
 
-viewFoodInfo:
+viewTotalData: ; TO BE DONE
   PUSH R0
   PUSH R1
-viewFoodInfoLoop:
+viewTotalDataLoop:
   CALL checkIfFoodIsSelected            ; is a food selected?
-  MOV R2, viewFoodInfoMenu
+  MOV R2, viewTotalDataMenu
   CALL drawDisplay
   CALL wipePeripherals
   CALL calculateCalories                ; calculate food's calories
@@ -301,7 +289,7 @@ viewFoodInfoLoop:
   CMP R1, GO_BACK
   JEQ main
   CALL errorMessage
-  JMP viewFoodInfoLoop
+  JMP viewTotalDataLoop
 
 calculateCalories:
   PUSH R0
@@ -347,18 +335,21 @@ resetFoodData: ; TO BE DONE
   ;POP R0
   ;RET
 
-checkIfAboveMaxWeight:
+checkIfAboveMaxWeight: ; UNTESTED
   PUSH R0
   PUSH R1
-  MOV R0, [R10]                         ; get weight of the food from R10
+  PUSH R10
+  MOV R10, SELECTED_WEIGHT              ; get weight of the food from R10
+  MOVB R0, [R10]
   MOV R1, MAX_WEIGHT
   CMP R0, R1
   JLT checkIfAboveMaxWeight_End
   MOV R0, 0                             ; weight is above 3000, therefore, set weight to 0
-  MOV [R10], R0
+  MOVB [R10], R0
 checkIfAboveMaxWeight_End:
-  POP R0
+  POP R10
   POP R1
+  POP R0
   RET
 
 drawDisplay:
