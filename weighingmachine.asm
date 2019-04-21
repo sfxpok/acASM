@@ -1,17 +1,19 @@
 ; peripherals
-PWR                         EQU 40H     ; start machine
-SEL_NR_MENU                 EQU 50H     ; selection input
-OK                          EQU 60H     ; confirmation of the user input
-CHANGE                      EQU 70H     ; switch selection
-PESO                        EQU 80H     ; weight input of a food
+PWR                         EQU 00H     ; start machine
+SEL_NR_MENU                 EQU 10H     ; selection input
+OK                          EQU 20H     ; confirmation of the user input
+CHANGE                      EQU 30H     ; switch selection
+PESO                        EQU 40H     ; weight input of a food
 ; stack pointer
 STACK_POINTER               EQU 9FF0H
 ; main menu constants
 WEIGHT_MACHINE              EQU 1
 VIEW_FOOD                   EQU 2
 RESET_DATA                  EQU 3
+SELECT_FOOD                 EQU 4
 ; weigh food constants
-CHANGE_FOOD                 EQU 2
+;CHANGE_FOOD                 EQU 2
+REGISTER_FOOD               EQU 2
 ; error menu constants
 GO_BACK                     EQU 1
 ; page 1 of food constants
@@ -26,7 +28,8 @@ PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
 FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
 ; storage
-WEIGHT                      EQU 120H    ; weight input stored
+SELECTED_FOOD               EQU 130H    ; selected food during runtime
+WEIGHT                      EQU 120H    ; weight input (PESO)
 
 ; display
 DISPLAY_START               EQU 0A0H     ; position to start the display
@@ -45,8 +48,8 @@ InitMenu:
   STRING "1: Balanca      "
   STRING "2: Visualizacao "
   STRING "3: Reiniciar    "
-  STRING "                "
-  STRING "                "
+  STRING "4: Selec.Alim.  "
+  STRING "5: Selec. Peso  "
 ErrorMenu:
   STRING "                "
   STRING "                "
@@ -71,17 +74,17 @@ ResetMenu:
   STRING "                "
   STRING "1: Sim          "
   STRING "2: Nao          "
-weighMenu:
+registerFoodDiaryMenu:
   STRING "Alimento:       "
   STRING "Peso:           "
   STRING "                "
   STRING "1: OK           "
-  STRING "2: Muda alimento"
-  STRING "3: Muda peso    " ; unsure...
+  STRING "2: Regista      "
+  STRING "                "
   STRING "                "
 viewFoodInfoMenu:
   STRING "Alimento:       "
-  STRING "Proteínas:      "
+  STRING "Proteinas:      "
   STRING "Hidr. Carb:     "
   STRING "Gorduras:       "
   STRING "                "
@@ -145,6 +148,19 @@ errorMessageLoop:
   POP R2
   POP R1
   POP R0
+  JMP main
+
+checkIfFoodIsSelected:
+  PUSH R0
+  PUSH R9
+  ;PUSH R1
+  ;MOV R0, [R9]                          ; get food in R9
+  JZ errorMessageNoFoodSelected         ; is food set to 0? (does it NOT exist?)
+  POP R9
+  ;POP R1
+  POP R0
+  RET
+
 
 errorMessageNoFoodSelected:
   PUSH R0
@@ -176,15 +192,19 @@ mainLoop:
   MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
   CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
-  JEQ mainLoop_weighFood
+  JEQ mainLoop_registerFoodDiary
   CMP R1, VIEW_FOOD                     ; is selection set to 2?
   JEQ mainLoop_viewFoodInfo
   CMP R1, RESET_DATA                    ; is selection set to 3?
   JEQ mainLoop_resetFoodData
+  CMP R1, SELECT_FOOD
+  JEQ mainLoop_changeFood1
+  CMP R1, SELECT_WEIGHT
+  JEQ mainLoop_changeWeight
   CALL errorMessage
   JMP mainLoop
-mainLoop_weighFood:
-  CALL weighFood
+mainLoop_registerFoodDiary:
+  CALL registerFoodDiary
   JMP mainLoop
 mainLoop_viewFoodInfo:
   CALL viewFoodInfo
@@ -192,11 +212,21 @@ mainLoop_viewFoodInfo:
 mainLoop_resetFoodData:
   CALL resetFoodData
   JMP mainLoop
+mainLoop_changeFood1:
+  CALL IsCHANGEActive
+  CALL changeFood1
+  JMP mainLoop
+mainLoop_changeWeight:
+  CALL changeWeight
+  JMP mainLoop
 mainLoop_end:
   POP R2
   POP R1
   POP R0
   RET
+
+changeWeight:
+  
 
 IsCHANGEActive:
   PUSH R0
@@ -213,6 +243,7 @@ IsCHANGEActiveLoop:
 changeFood1: ; TO BE DONE
   PUSH R0
   PUSH R1
+  PUSH R9
 changeFood1Loop:
   MOV R2, ChangeFoodMenu1
   CALL drawDisplay
@@ -220,25 +251,40 @@ changeFood1Loop:
   CALL IsOKActive
   MOV R0, SEL_NR_MENU
   MOVB R1, [R0]
+  CALL SaveSelectedFoodToMemory
+  POP R9
+  POP R1
+  POP R0
+  RET
 
-weighFood: ; TO BE DONE
+SaveSelectedFoodToMemory:
+  MOV R9, SELECTED_FOOD
+  MOVB [R9], R1
+  RET
+
+registerFoodDiary: ; TO BE DONE
   PUSH R0
   PUSH R1
   PUSH R2
-weighFoodLoop:
-  MOV R2, weighMenu
+registerFoodDiaryLoop:
+  MOV R2, registerFoodDiaryMenu
   CALL drawDisplay
   CALL wipePeripherals
+  CALL checkIfFoodIsSelected
   CALL IsOKActive
   MOV R0, SEL_NR_MENU
   MOVB R1, [R0]
   CMP R1, GO_BACK
   JEQ main
-  CMP R1, CHANGE_FOOD
-  JEQ weighFoodLoop_CHANGE
+  ;CMP R1, CHANGE_FOOD
+  ;JEQ registerFoodDiaryLoop_CHANGE
+  CMP R1, REGISTER_FOOD
+  JEQ registerFoodDiarySave
   CALL errorMessage
-  JMP weighFoodLoop
-weighFoodLoop_CHANGE:
+  JMP registerFoodDiaryLoop
+registerFoodDiarySave:
+  ;CALL checkIfOverflow
+registerFoodDiaryLoop_CHANGE:
   CALL IsCHANGEActive
   CALL changeFood1
   RET
@@ -289,29 +335,20 @@ resetFoodData: ; TO BE DONE
 
 ;roundGrams:
 
-checkIfFoodIsSelected:
-  PUSH R0
+;checkIfOverflow:
+  ;PUSH R0
   ;PUSH R1
-  MOV R0, [R9]                          ; get food in R9
-  JZ errorMessageNoFoodSelected         ; is food set to 0? (does it NOT exist?)
+  ;MOV R0, R6                            ; R6 - P
+  ;JV errorMessage
+  ;MOV R0, R7                            ; R7 - C
+  ;JV errorMessage
+  ;MOV R0, R8                            ; R8 - F
+  ;JV errorMessage
+  ;MOV R0, R9                            ; R9 - K
+  ;JV errorMessage
   ;POP R1
-  POP R0
-  RET
-
-checkIfOverflow:
-  PUSH R0
-  ;PUSH R1
-  MOV R0, R6                            ; R6 - P
-  JV errorMessage
-  MOV R0, R7                            ; R7 - C
-  JV errorMessage
-  MOV R0, R8                            ; R8 - F
-  JV errorMessage
-  MOV R0, R9                            ; R9 - K
-  JV errorMessage
-  ;POP R1
-  POP R0
-  RET
+  ;POP R0
+  ;RET
 
 checkIfAboveMaxWeight:
   PUSH R0
@@ -389,16 +426,16 @@ wipePeripherals:
   MOV R1, SEL_NR_MENU
   MOV R2, OK
   MOV R3, CHANGE
-  MOV R4, PESO
+  ;MOV R4, PESO
   MOV R5, 0
   ;MOVB [R0], R5                        ; wipe PWR input
   MOVB [R1], R5                         ; wipe selection input
   MOVB [R2], R5                         ; wipe OK input
   MOVB [R3], R5                         ; wipe CHANGE input
-  MOV [R4], R5                          ; wipe PESO input
-  MOV [R4+2], R5
-  MOV [R4+4], R5
-  MOV [R4+6], R5
+  ;MOV [R4], R5                          ; wipe PESO input
+  ;MOV [R4+2], R5
+  ;MOV [R4+4], R5
+  ;MOV [R4+6], R5
   POP R5
   POP R4
   POP R3
