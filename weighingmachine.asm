@@ -153,11 +153,11 @@ errorMessageLoop:
 checkIfFoodIsSelected:
   PUSH R0
   PUSH R9
-  ;PUSH R1
-  ;MOV R0, [R9]                          ; get food in R9
+  MOV R9, SELECTED_FOOD
+  MOVB R0, [R9]                          ; get food in R9
+  CMP R0, 0
   JZ errorMessageNoFoodSelected         ; is food set to 0? (does it NOT exist?)
   POP R9
-  ;POP R1
   POP R0
   RET
 
@@ -199,8 +199,6 @@ mainLoop:
   JEQ mainLoop_resetFoodData
   CMP R1, SELECT_FOOD
   JEQ mainLoop_changeFood1
-  CMP R1, SELECT_WEIGHT
-  JEQ mainLoop_changeWeight
   CALL errorMessage
   JMP mainLoop
 mainLoop_registerFoodDiary:
@@ -216,17 +214,11 @@ mainLoop_changeFood1:
   CALL IsCHANGEActive
   CALL changeFood1
   JMP mainLoop
-mainLoop_changeWeight:
-  CALL changeWeight
-  JMP mainLoop
 mainLoop_end:
   POP R2
   POP R1
   POP R0
   RET
-
-changeWeight:
-  
 
 IsCHANGEActive:
   PUSH R0
