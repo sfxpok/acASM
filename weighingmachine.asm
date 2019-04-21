@@ -41,11 +41,15 @@ DISPLAY_END_WEIGHT          EQU 0B04H
 ; reserved registers
 ; R10: weight of the food
 ; R9: selected food
+; R8: calories
+; R7: fats
+; R6: carbohydrates
+; R5: protein
 
 ; display menus
 PLACE 1000H
 
-InitMenu:
+MainMenu:
   STRING "    WMachine    "
   STRING "                "
   STRING "1: Balanca      "
@@ -65,6 +69,14 @@ ErrorNoFoodSelectedMenu:
   STRING "                "
   STRING " Nao ha nenhum  "
   STRING "   alimento     "
+  STRING "  selecionado   "
+  STRING "                "
+  STRING "1: OK           "
+  STRING "                "
+ErrorNoFoodSelectedMenu:
+  STRING "                "
+  STRING " Nao ha nenhum  "
+  STRING "     peso       "
   STRING "  selecionado   "
   STRING "                "
   STRING "1: OK           "
@@ -93,7 +105,7 @@ viewTotalDataMenu:
   STRING "                "
   STRING "1: OK           "
   STRING "2: Reiniciar    "
-ChangeFoodMenu1:
+ChangeFoodMenuOne:
   STRING "Selec.Alim. P1/6"
   STRING "                "
   STRING "1: Aveia        "
@@ -163,6 +175,17 @@ checkIfFoodIsSelected:
   POP R0
   RET
 
+checkIfWeightIsSelected:
+  PUSH R0
+  PUSH R10
+  MOV R10, SELECTED_WEIGHT
+  MOVB R0, [R10]                          ; get weight in R10
+  CMP R0, 0
+  JZ errorMessageNoWeightSelected         ; is weight set to 0? (does it NOT exist?)
+  POP R10
+  POP R0
+  RET
+
 errorMessageNoFoodSelected:
   PUSH R0
   PUSH R1
@@ -181,12 +204,30 @@ errorMessageNoFoodSelectedLoop:
   POP R0
   JMP main
 
+errorMessageNoWeightSelected:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+errorMessageNoWeightSelectedLoop:
+  MOV R2, ErrorNoWeightSelectedMenu     ; display error menu (no weight selected)
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL IsOKActive                       ; is ok being pressed
+  MOV R0, SEL_NR_MENU                   ; move selection value to register bank
+  MOVB R1, [R0]
+  CMP R1, GO_BACK                       ; is selection set to 1?
+  JNE errorMessageNoWeightSelectedLoop    ; SEL_NR_MENU != 1?
+  POP R2
+  POP R1
+  POP R0
+  JMP main
+
 main:
   PUSH R0
   PUSH R1
   PUSH R2
 mainLoop:
-  MOV R2, InitMenu                      ; get main menu ready
+  MOV R2, MainMenu                      ; get main menu ready
   CALL drawDisplay                      ; draw display
   CALL wipePeripherals
   CALL IsOKActive
@@ -222,12 +263,12 @@ IsCHANGEActiveLoop:
   POP R0
   RET
 
-changeFood1:
+changeFoodOne:
   PUSH R0
   PUSH R1
   PUSH R9
-changeFood1Loop:
-  MOV R2, ChangeFoodMenu1
+changeFoodOneLoop:
+  MOV R2, ChangeFoodMenuOne
   CALL drawDisplay
   CALL wipePeripherals
   CALL IsOKActive
@@ -263,7 +304,7 @@ registerFoodDiaryLoop:
   CMP R1, UPDATE_WEIGHT
   JEQ drawDisplayWeight
   CMP R1, SELECT_FOOD
-  JEQ changeFood1
+  JEQ registerFoodDiaryLoop_CHANGE
   CALL errorMessage
   JMP registerFoodDiaryLoop
 registerFoodDiarySave:
@@ -271,7 +312,7 @@ registerFoodDiarySave:
   CALL calculateCalories
 registerFoodDiaryLoop_CHANGE:
   CALL IsCHANGEActive
-  CALL changeFood1
+  CALL changeFoodOne
   RET
 
 viewTotalData: ; TO BE DONE
