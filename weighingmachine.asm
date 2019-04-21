@@ -14,6 +14,7 @@ SELECT_FOOD                 EQU 4
 ; weigh food constants
 ;CHANGE_FOOD                 EQU 2
 REGISTER_FOOD               EQU 2
+UPDATE_WEIGHT               EQU 3
 ; error menu constants
 GO_BACK                     EQU 1
 ; page 1 of food constants
@@ -29,11 +30,14 @@ FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
 ; storage
 SELECTED_FOOD               EQU 130H    ; selected food during runtime
-WEIGHT                      EQU 120H    ; weight input (PESO)
+SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
 
 ; display
 DISPLAY_START               EQU 0A0H     ; position to start the display
 DISPLAY_END                 EQU 10FH     ; position to shut down the display
+
+DISPLAY_START_WEIGHT        EQU 0B01H
+DISPLAY_END_WEIGHT          EQU 0B04H
 
 ; reserved registers
 ; R10: weight of the food
@@ -80,7 +84,7 @@ registerFoodDiaryMenu:
   STRING "                "
   STRING "1: OK           "
   STRING "2: Regista      "
-  STRING "                "
+  STRING "3: Atualiza Peso"
   STRING "                "
 viewFoodInfoMenu:
   STRING "Alimento:       "
@@ -160,7 +164,6 @@ checkIfFoodIsSelected:
   POP R9
   POP R0
   RET
-
 
 errorMessageNoFoodSelected:
   PUSH R0
@@ -272,6 +275,8 @@ registerFoodDiaryLoop:
   ;JEQ registerFoodDiaryLoop_CHANGE
   CMP R1, REGISTER_FOOD
   JEQ registerFoodDiarySave
+  CMP R1, UPDATE_WEIGHT
+  JEQ drawDisplayWeight
   CALL errorMessage
   JMP registerFoodDiaryLoop
 registerFoodDiarySave:
@@ -374,6 +379,19 @@ drawDisplayLoop:
   POP R2
   POP R1
   POP R0
+  RET
+
+drawDisplayWeight: ; TO BE DONE
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  MOV R0, DISPLAY_START_WEIGHT
+  MOV R1, DISPLAY_END_WEIGHT
+  MOV R2, SELECTED_WEIGHT
+  MOVB R4, [R2]
+  ;CALL drawDisplayLoop
   RET
 
 wipeDisplay:
