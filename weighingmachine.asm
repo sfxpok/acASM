@@ -28,6 +28,7 @@ FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
 GO_BACK                     EQU 1
 REGISTER_FOOD_FLAG          EQU 50H
+OK_FLAG                     EQU 60H
 ; storage
 SELECTED_FOOD               EQU 130H    ; selected food during runtime
 SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
@@ -134,7 +135,7 @@ Startup:
 StartupLoop:
   CALL waitForPower                     ; check if power is on
   CALL main                             ; display main menu
-  CALL IsOKActive
+  CALL checkOKFlag
   JMP StartupLoop                       ; repeat routine
 
 waitForPower:
@@ -157,7 +158,7 @@ errorMessageLoop:
   MOV R2, ErrorMenu                     ; display error menu
   CALL drawDisplay
   CALL wipePeripherals
-  CALL IsOKActive                       ; is ok being pressed
+  CALL checkOKFlag                       ; is ok being pressed
   MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
   CMP R1, GO_BACK                       ; is selection set to 1?
@@ -197,7 +198,7 @@ errorMessageNoFoodSelectedLoop:
   MOV R2, ErrorNoFoodSelectedMenu       ; display error menu (no food selected)
   CALL drawDisplay
   CALL wipePeripherals
-  CALL IsOKActive                       ; is ok being pressed
+  CALL checkOKFlag                       ; is ok being pressed
   MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
   CMP R1, GO_BACK                       ; is selection set to 1?
@@ -215,7 +216,7 @@ errorMessageNoWeightSelectedLoop:
   MOV R2, ErrorNoWeightSelectedMenu     ; display error menu (no weight selected)
   CALL drawDisplay
   CALL wipePeripherals
-  CALL IsOKActive                       ; is ok being pressed
+  CALL checkOKFlag                       ; is ok being pressed
   MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
   CMP R1, GO_BACK                       ; is selection set to 1?
@@ -224,6 +225,54 @@ errorMessageNoWeightSelectedLoop:
   POP R1
   POP R0
   JMP main
+
+drawDisplayWeight: ; TO BE DONE
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  MOV R0, DISPLAY_START_WEIGHT
+  MOV R1, DISPLAY_END_WEIGHT
+  MOV R2, SELECTED_WEIGHT
+  MOVB R4, [R2]
+  ;CALL drawDisplayLoop
+  RET
+
+registerFoodDiary: ; TO BE DONE
+  PUSH R0
+  PUSH R1
+  PUSH R2
+registerFoodDiaryLoop:
+  MOV R2, registerFoodDiaryMenu
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL SwitchRegisterFoodFlag
+  CALL checkOKFlag
+  MOV R0, SEL_NR_MENU
+  MOVB R1, [R0]
+  CMP R1, GO_BACK
+  JEQ main
+  CMP R1, REGISTER_FOOD
+  JEQ registerFoodDiaryLoop_SAVE
+  CMP R1, UPDATE_WEIGHT
+  JEQ drawDisplayWeight
+  CMP R1, CHANGE_FOOD
+  JEQ registerFoodDiaryLoop_CHANGE
+  CALL errorMessage
+  JMP registerFoodDiaryLoop
+registerFoodDiaryLoop_SAVE:
+  CALL checkIfFoodIsSelected
+  CALL checkIfWeightIsSelected
+  ;CALL checkIfOverflow
+  CALL calculateCalories
+  RET
+registerFoodDiaryLoop_CHANGE:
+  CALL IsCHANGEActive
+  CALL SwitchRegisterFoodFlag
+  CALL changeFoodOne
+  RET
+
 
 main:
   PUSH R0
@@ -234,7 +283,8 @@ mainLoop:
   CALL drawDisplay                      ; draw display
   CALL wipePeripherals
   CALL checkSwitches
-  CALL IsOKActive
+  ;CALL IsOKActive
+  ;CALL checkOKFlag
   MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
   CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
@@ -255,6 +305,23 @@ mainLoop_end:
   POP R0
   RET
 
+checkOKFlag:
+  PUSH R0
+  PUSH R1
+checkOKFlagLoop:
+  MOV R0, OK_FLAG
+  MOVB R1, [R0]
+  CMP R1, 1
+  JNE checkOKFlagTEST
+  POP R1
+  POP R0
+  RET
+checkOKFlagTEST:
+  POP R1
+  POP R0
+  JMP checkSwitches
+  RET
+
 viewTotalData: ; TO BE DONE
   PUSH R0
   PUSH R1
@@ -263,7 +330,7 @@ viewTotalDataLoop:
   CALL drawDisplay
   CALL wipePeripherals
   CALL calculateCalories                ; calculate food's calories
-  CALL IsOKActive                       ; is OK being pressed?
+  CALL checkOKFlag                       ; is OK being pressed?
   MOV R0, SEL_NR_MENU
   MOVB R1, [R0]
   CMP R1, GO_BACK
@@ -274,14 +341,15 @@ viewTotalDataLoop:
 IsCHANGEActive:
   PUSH R0
   PUSH R1
-  MOV R0, REGISTER_FOOD_FLAG
-  MOVB R1, [R0]
-  CMP R1, 1
-  JZ IsCHANGEActive_end
+  MOV R0, REGISTER_FOOD_FLAG            ; move REGISTER_FOOD_FLAG to register bank
+  MOVB R1, [R0]                         ; move REGISTER_FOOD_FLAG value to memory
+  CMP R1, 1                             ; are we in the registerFoodDiary menu?
+  JNE IsCHANGEActive_end                ; REGISTER_FOOD_FLAG != 1?
   MOV R0, CHANGE                        ; move CHANGE value to register bank
   MOVB R1, [R0]                         ; move CHANGE value to memory
   CMP R1, 1                             ; is CHANGE pressed?
-  ;JNE IsCHANGEActiveLoop               ; CHANGE != 1?
+  ;JNE IsCHANGEActiveLoop
+  JNE IsCHANGEActive_end                ; CHANGE != 1?
   CALL changeFoodOne
   JMP IsCHANGEActive_end                ; !
 IsCHANGEActive_end:
@@ -290,9 +358,21 @@ IsCHANGEActive_end:
   RET
 
 checkSwitches:
+  PUSH R0
+  PUSH R1
+checkSwitchesLoop:
   CALL checkPWR
   CALL IsCHANGEActive
-  CALL IsOKActive
+  ;CALL IsOKActive
+
+  PUSH R0
+  PUSH R1
+  MOV R0, OK
+  MOVB R1, [R0]
+  CMP R1, 1
+  JNE checkSwitchesLoop
+  POP R1
+  POP R0
   RET
 
 checkPWR:
@@ -300,7 +380,7 @@ checkPWR:
   PUSH R1
   MOV R0, PWR
   MOVB R1, [R0]
-  CMP R1, 0
+  CMP R1, 1
   JZ checkPWR_end
   POP R1
   POP R0
@@ -339,7 +419,7 @@ changeFoodOneLoop:
   MOV R2, ChangeFoodMenuOne
   CALL drawDisplay
   CALL wipePeripherals
-  CALL IsOKActive
+  CALL checkOKFlag
   MOV R0, SEL_NR_MENU
   MOVB R1, [R0]
   CALL SaveSelectedFoodToMemory
@@ -351,40 +431,6 @@ changeFoodOneLoop:
 SaveSelectedFoodToMemory:
   MOV R9, SELECTED_FOOD
   MOVB [R9], R1
-  RET
-
-registerFoodDiary: ; TO BE DONE
-  PUSH R0
-  PUSH R1
-  PUSH R2
-registerFoodDiaryLoop:
-  MOV R2, registerFoodDiaryMenu
-  CALL drawDisplay
-  CALL wipePeripherals
-  CALL SwitchRegisterFoodFlag
-  CALL IsOKActive
-  MOV R0, SEL_NR_MENU
-  MOVB R1, [R0]
-  CMP R1, GO_BACK
-  JEQ main
-  CMP R1, REGISTER_FOOD
-  JEQ registerFoodDiaryLoop_SAVE
-  CMP R1, UPDATE_WEIGHT
-  JEQ drawDisplayWeight
-  CMP R1, CHANGE_FOOD
-  JEQ registerFoodDiaryLoop_CHANGE
-  CALL errorMessage
-  JMP registerFoodDiaryLoop
-registerFoodDiaryLoop_SAVE:
-  CALL checkIfFoodIsSelected
-  CALL checkIfWeightIsSelected
-  ;CALL checkIfOverflow
-  CALL calculateCalories
-  RET
-registerFoodDiaryLoop_CHANGE:
-  CALL IsCHANGEActive
-  CALL SwitchRegisterFoodFlag
-  CALL changeFoodOne
   RET
 
 calculateCalories: ; TO BE DONE
@@ -468,19 +514,6 @@ drawDisplayLoop:
   POP R0
   RET
 
-drawDisplayWeight: ; TO BE DONE
-  PUSH R0
-  PUSH R1
-  PUSH R2
-  PUSH R3
-  PUSH R4
-  MOV R0, DISPLAY_START_WEIGHT
-  MOV R1, DISPLAY_END_WEIGHT
-  MOV R2, SELECTED_WEIGHT
-  MOVB R4, [R2]
-  ;CALL drawDisplayLoop
-  RET
-
 wipeDisplay:
   PUSH R0
   PUSH R1
@@ -503,11 +536,34 @@ wipeDisplayLoop:
 IsOKActive:
   PUSH R0
   PUSH R1
-IsOKActiveLoop:
   MOV R0, OK                            ; move OK value to register bank
   MOVB R1, [R0]                         ; move OK value to memory
   CMP R1, 1                             ; is OK pressed?
-  JNE IsOKActiveLoop                    ; OK != 1?
+  ;JNE IsOKActiveLoop
+  JNE IsOKActive_end                    ; OK != 1?
+  CALL SwitchOKFlag
+  JMP IsOKActive_end
+IsOKActive_end:
+  POP R1
+  POP R0
+  RET
+
+SwitchOKFlag:
+  ;PUSH R0
+  ;PUSH R1
+  ;PUSH R2
+  MOV R1, OK_FLAG
+  MOVB R0, [R1]
+  CMP R0, 0
+  JZ ActivateOKFlag
+  MOV R2, 0
+  MOVB [R1], R2
+  JMP SwitchOKFlag_end
+ActivateOKFlag:
+  MOV R2, 1
+  MOVB [R1], R2
+SwitchOKFlag_end:
+  POP R2
   POP R1
   POP R0
   RET
