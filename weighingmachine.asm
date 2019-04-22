@@ -27,6 +27,7 @@ PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
 FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
 GO_BACK                     EQU 1
+REGISTER_FOOD_FLAG          EQU 50H
 ; storage
 SELECTED_FOOD               EQU 130H    ; selected food during runtime
 SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
@@ -265,6 +266,36 @@ IsCHANGEActiveLoop:
   POP R0
   RET
 
+checkSwitches:
+  PUSH R0
+  PUSH R1
+  ;CALL checkPWR
+  CALL checkRegisterMode
+  CALL IsOKActive
+  POP R1
+  POP R0
+  RET
+
+SwitchRegisterFoodFlag:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  MOV R1, REGISTER_FOOD_FLAG
+  MOVB R0, [R1]
+  CMP R0, 0
+  JZ ActivateRegisterFoodFlag
+  MOV R2, 0
+  MOVB [R1], R2
+  JMP SwitchRegisterFoodFlag_end
+ActivateRegisterFoodFlag:
+  MOV R2, 1
+  MOVB [R1], R2
+SwitchRegisterFoodFlag_end:
+  POP R2
+  POP R1
+  POP R0
+  RET
+
 changeFoodOne:
   PUSH R0
   PUSH R1
@@ -295,6 +326,7 @@ registerFoodDiaryLoop:
   MOV R2, registerFoodDiaryMenu
   CALL drawDisplay
   CALL wipePeripherals
+  CALL SwitchRegisterFoodFlag
   CALL IsOKActive
   MOV R0, SEL_NR_MENU
   MOVB R1, [R0]
@@ -316,6 +348,7 @@ registerFoodDiaryLoop_SAVE:
   RET
 registerFoodDiaryLoop_CHANGE:
   CALL IsCHANGEActive
+  CALL SwitchRegisterFoodFlag
   CALL changeFoodOne
   RET
 
