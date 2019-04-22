@@ -5,7 +5,7 @@ OK                          EQU 20H     ; confirmation of the user input
 CHANGE                      EQU 30H     ; switch selection
 PESO                        EQU 40H     ; weight input of a food
 ; stack pointer
-STACK_POINTER               EQU 9FF0H
+STACK_POINTER               EQU 2000H
 ; main menu constants
 WEIGHT_MACHINE              EQU 1
 VIEW_TOTAL_DATA             EQU 2
@@ -99,8 +99,8 @@ registerFoodDiaryMenu:
   STRING "                "
   STRING "1: OK           "
   STRING "2: Regista      "
-  STRING "3: Atualiza Peso"
-  STRING "4: Selec. Alim. "
+  STRING "                "
+  STRING "                "
 viewTotalDataMenu:
   STRING "Proteinas:      "
   STRING "Hidr. Carb:     "
@@ -145,7 +145,7 @@ waitForPowerLoop:
   MOV R0, PWR                           ; move PWR value to register bank
   MOVB R1, [R0]
   CMP R1, 1                             ; is PWR set to 1?
-  JNE waitForPower                      ; PWR != 1?
+  JNE waitForPowerLoop                  ; PWR != 1?
   POP R1
   POP R0
   RET
@@ -255,10 +255,6 @@ registerFoodDiaryLoop:
   JEQ main
   CMP R1, REGISTER_FOOD
   JEQ registerFoodDiaryLoop_SAVE
-  CMP R1, UPDATE_WEIGHT
-  JEQ drawDisplayWeight
-  CMP R1, CHANGE_FOOD
-  JEQ registerFoodDiaryLoop_CHANGE
   CALL errorMessage
   JMP registerFoodDiaryLoop
 registerFoodDiaryLoop_SAVE:
@@ -267,12 +263,6 @@ registerFoodDiaryLoop_SAVE:
   ;CALL checkIfOverflow
   CALL calculateCalories
   RET
-registerFoodDiaryLoop_CHANGE:
-  CALL IsCHANGEActive
-  CALL SwitchRegisterFoodFlag
-  CALL changeFoodOne
-  RET
-
 
 main:
   PUSH R0
@@ -373,6 +363,8 @@ checkSwitchesLoop:
   JNE checkSwitchesLoop
   POP R1
   POP R0
+  POP R1
+  POP R0
   RET
 
 checkPWR:
@@ -381,11 +373,15 @@ checkPWR:
   MOV R0, PWR
   MOVB R1, [R0]
   CMP R1, 1
-  JZ checkPWR_end
+  JZ checkPWR_end                       ; PWR = 1?
   POP R1
   POP R0
   CALL wipeDisplay
-  JMP waitForPower                      ; !
+  ;JMP waitForPower                      ; !
+  CALL waitForPower
+  POP R1
+  POP R0
+  CALL main
 checkPWR_end:
   POP R1
   POP R0
