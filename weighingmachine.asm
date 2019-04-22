@@ -76,7 +76,7 @@ ErrorNoFoodSelectedMenu:
   STRING "                "
   STRING "1: OK           "
   STRING "                "
-ErrorNoFoodSelectedMenu:
+ErrorNoWeightSelectedMenu:
   STRING "                "
   STRING " Nao ha nenhum  "
   STRING "     peso       "
@@ -233,6 +233,7 @@ mainLoop:
   MOV R2, MainMenu                      ; get main menu ready
   CALL drawDisplay                      ; draw display
   CALL wipePeripherals
+  CALL checkSwitches
   CALL IsOKActive
   MOV R0, SEL_NR_MENU                   ; move selection value to register bank
   MOVB R1, [R0]
@@ -253,6 +254,22 @@ mainLoop_end:
   POP R1
   POP R0
   RET
+
+viewTotalData: ; TO BE DONE
+  PUSH R0
+  PUSH R1
+viewTotalDataLoop:
+  MOV R2, viewTotalDataMenu
+  CALL drawDisplay
+  CALL wipePeripherals
+  CALL calculateCalories                ; calculate food's calories
+  CALL IsOKActive                       ; is OK being pressed?
+  MOV R0, SEL_NR_MENU
+  MOVB R1, [R0]
+  CMP R1, GO_BACK
+  JEQ main
+  CALL errorMessage
+  JMP viewTotalDataLoop
 
 IsCHANGEActive:
   PUSH R0
@@ -354,14 +371,14 @@ registerFoodDiaryLoop:
   JEQ registerFoodDiaryLoop_SAVE
   CMP R1, UPDATE_WEIGHT
   JEQ drawDisplayWeight
-  CMP R1, SELECT_FOOD
+  CMP R1, CHANGE_FOOD
   JEQ registerFoodDiaryLoop_CHANGE
   CALL errorMessage
   JMP registerFoodDiaryLoop
 registerFoodDiaryLoop_SAVE:
   CALL checkIfFoodIsSelected
   CALL checkIfWeightIsSelected
-  CALL checkIfOverflow
+  ;CALL checkIfOverflow
   CALL calculateCalories
   RET
 registerFoodDiaryLoop_CHANGE:
@@ -369,22 +386,6 @@ registerFoodDiaryLoop_CHANGE:
   CALL SwitchRegisterFoodFlag
   CALL changeFoodOne
   RET
-
-viewTotalData: ; TO BE DONE
-  PUSH R0
-  PUSH R1
-viewTotalDataLoop:
-  MOV R2, viewTotalDataMenu
-  CALL drawDisplay
-  CALL wipePeripherals
-  CALL calculateCalories                ; calculate food's calories
-  CALL IsOKActive                       ; is OK being pressed?
-  MOV R0, SEL_NR_MENU
-  MOVB R1, [R0]
-  CMP R1, GO_BACK
-  JEQ main
-  CALL errorMessage
-  JMP viewTotalDataLoop
 
 calculateCalories: ; TO BE DONE
   PUSH R0
