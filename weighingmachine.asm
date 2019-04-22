@@ -257,21 +257,39 @@ mainLoop_end:
 IsCHANGEActive:
   PUSH R0
   PUSH R1
-IsCHANGEActiveLoop:
+  MOV R0, REGISTER_FOOD_FLAG
+  MOVB R1, [R0]
+  CMP R1, 1
+  JZ IsCHANGEActive_end
   MOV R0, CHANGE                        ; move CHANGE value to register bank
   MOVB R1, [R0]                         ; move CHANGE value to memory
   CMP R1, 1                             ; is CHANGE pressed?
-  JNE IsCHANGEActiveLoop                ; CHANGE != 1?
+  ;JNE IsCHANGEActiveLoop               ; CHANGE != 1?
+  CALL changeFoodOne
+  JMP IsCHANGEActive_end                ; !
+IsCHANGEActive_end:
   POP R1
   POP R0
   RET
 
 checkSwitches:
+  CALL checkPWR
+  CALL IsCHANGEActive
+  CALL IsOKActive
+  RET
+
+checkPWR:
   PUSH R0
   PUSH R1
-  ;CALL checkPWR
-  CALL checkRegisterMode
-  CALL IsOKActive
+  MOV R0, PWR
+  MOVB R1, [R0]
+  CMP R1, 0
+  JZ checkPWR_end
+  POP R1
+  POP R0
+  CALL wipeDisplay
+  JMP waitForPower                      ; !
+checkPWR_end:
   POP R1
   POP R0
   RET
