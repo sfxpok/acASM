@@ -283,23 +283,17 @@ Init:
 ;PLACE 600H
 Startup:
   MOV SP, STACK_POINTER                 ; set stack pointer ready
-StartupLoop:
-  CALL waitForPower                     ; check if power is on
-  CALL main                             ; display main menu
-  CALL checkOKFlag
-  JMP StartupLoop                       ; repeat routine
 
 waitForPower:
-  PUSH R0
-  PUSH R1
+  MOV R0, waitForPowerMenu
+  CALL drawDisplay
 waitForPowerLoop:
   MOV R0, PWR                           ; move PWR value to register bank
   MOVB R1, [R0]
-  CMP R1, 1                             ; is PWR set to 1?
-  JNE waitForPowerLoop                  ; PWR != 1?
-  POP R1
-  POP R0
-  RET
+  MOV R2, 31H
+  CMP R1, R2                            ; is PWR set to 1?
+  JZ main                               ; PWR = 1?
+  JMP waitForPowerLoop
 
 errorMessage:
   PUSH R0
