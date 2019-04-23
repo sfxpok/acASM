@@ -4,17 +4,17 @@ SEL_NR_MENU                 EQU 10H     ; selection input
 OK                          EQU 20H     ; confirmation of the user input
 CHANGE                      EQU 30H     ; switch selection
 PESO                        EQU 40H     ; weight input of a food
+NEXT_PAGE                   EQU 50H     ; go to next food page
 ; stack pointer
-STACK_POINTER               EQU 2000H
+STACK_POINTER               EQU F000H
 ; main menu constants
 WEIGHT_MACHINE              EQU 1
 VIEW_TOTAL_DATA             EQU 2
+RESET_DATA                  EQU 3
 ; register food diary menu constants
 REGISTER_FOOD               EQU 2
 UPDATE_WEIGHT               EQU 3
 CHANGE_FOOD                 EQU 4
-; view total data menu constants
-RESET_DATA                  EQU 2
 ; page 1 menu of food constants
 AVEIA                       EQU 1
 PAO_FORMA                   EQU 2
@@ -27,13 +27,78 @@ PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
 FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
 GO_BACK                     EQU 1
-REGISTER_FOOD_FLAG          EQU 50H
-OK_FLAG                     EQU 60H
+REGISTER_FOOD_FLAG          EQU 60H
+OK_FLAG                     EQU 70H
 ; storage
 SELECTED_FOOD               EQU 130H    ; selected food during runtime
 SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
 
 BASE_DIARY_FOOD             EQU 1000H   ; base address of the food diary
+
+; food table (options)
+OPTION_OATS                 EQU 3000H   ; option to choose oats
+OPTION_SLICED_BREAD         EQU 3001H   ; option to choose sliced bread
+OPTION_POTATOES             EQU 3002H   ; option to choose potatoes
+OPTION_RICE                 EQU 3003H   ; option to choose rice
+OPTION_BEANS                EQU 3004H   ; option to choose beans
+OPTION_VEGETABLES           EQU 3005H   ; option to choose vegetables
+OPTION_TOMATO               EQU 3006H   ; option to choose tomato
+OPTION_BANANA               EQU 3007H   ; option to choose banana
+OPTION_ORANGE               EQU 3008H   ; option to choose orange
+OPTION_APPLE                EQU 3009H   ; option to choose apple
+OPTION_KIWI                 EQU 3010H   ; option to choose kiwi
+OPTION_CHOCOLATE_COOKIE     EQU 3011H   ; option to choose chocolate cookie
+OPTION_PIZZA                EQU 3012H   ; option to choose pizza
+OPTION_ALMONDS              EQU 3013H   ; option to choose almonds
+OPTION_LINSEED              EQU 3014H   ; option to choose linseed
+OPTION_OLIVE_OIL            EQU 3015H   ; option to choose olive oil
+OPTION_SKIM_MILK            EQU 3016H   ; option to choose skim milk
+OPTION_WHEY                 EQU 3017H   ; option to choose whey
+OPTION_SALMON               EQU 3018H   ; option to choose salmon
+OPTION_WHITE_FISH           EQU 3019H   ; option to choose white fish
+OPTION_TUNA                 EQU 3020H   ; option to choose tuna
+OPTION_PORK                 EQU 3021H   ; option to choose pork
+OPTION_CHICKEN              EQU 3022H   ; option to choose chicken
+OPTION_TURKEY               EQU 3023H   ; option to choose turkey
+OPTION_EGG                  EQU 3024H   ; option to choose egg
+OPTION_CHEESE               EQU 3025H   ; option to choose cheese
+
+; food table (display names)
+NAME_OATS                   EQU 4000H   ; memory address of oats
+NAME_SLICED_BREAD           EQU 4020H   ; memory address of sliced bread
+NAME_POTATOES               EQU 4040H   ; memory address of potatoes
+NAME_RICE                   EQU 4060H   ; memory address of rice
+NAME_BEANS                  EQU 4080H   ; memory address of beans
+NAME_VEGETABLES             EQU 40A0H   ; memory address of vegetables
+NAME_TOMATO                 EQU 40C0H   ; memory address of tomato
+NAME_BANANA                 EQU 40E0H   ; memory address of banana
+NAME_ORANGE                 EQU 4100H   ; memory address of orange
+NAME_APPLE                  EQU 4120H   ; memory address of apple
+NAME_KIWI                   EQU 4140H   ; memory address of kiwi
+NAME_CHOCOLATE_COOKIE       EQU 4160H   ; memory address of chocolate cookie
+NAME_PIZZA                  EQU 4180H   ; memory address of pizza
+NAME_ALMONDS                EQU 41A0H   ; memory address of almonds
+NAME_LINSEED                EQU 41C0H   ; memory address of linseed
+NAME_OLIVE_OIL              EQU 41E0H   ; memory address of olive oil
+NAME_SKIM_MILK              EQU 4200H   ; memory address of skim milk
+NAME_WHEY                   EQU 4220H   ; memory address of whey
+NAME_SALMON                 EQU 4240H   ; memory address of salmon
+NAME_WHITE_FISH             EQU 4260H   ; memory address of white fish
+NAME_TUNA                   EQU 4280H   ; memory address of tuna
+NAME_PORK                   EQU 42A0H   ; memory address of pork
+NAME_CHICKEN                EQU 42C0H   ; memory address of chicken
+NAME_TURKEY                 EQU 42E0H   ; memory address of turkey
+NAME_EGG                    EQU 4300H   ; memory address of egg
+NAME_CHEESE                 EQU 4320H   ; memory address of cheese
+
+; other food table memory addresses
+END_FOOD_TABLE              EQU 4340H   ; memory address of the end of the food table
+
+; consumed nutrients table
+INIT_CONSUMED_TABLE         EQU 0EA0H   ; memory address of the beginning of the total consumed nutrients table
+TOTAL_PROTEIN               EQU 0EA0H   ; total consumed protein
+TOTAL_CARBOHYDRATES         EQU 0EA4H   ; total consumed carbohydrates
+TOTAL_FATS                  EQU 0EA8H   ; total consumed fats
 
 ; display
 DISPLAY_START               EQU 0A0H     ; position to start the display
@@ -109,20 +174,86 @@ viewTotalDataMenu:
   STRING "                "
   STRING "1: OK           "
   STRING "2: Reiniciar    "
-ChangeFoodMenuOne:
-  STRING "Selec.Alim. P1/6"
-  STRING "                "
-  STRING "1: Aveia        "
-  STRING "2: Pao Forma    "
-  STRING "3: Batata       "
-  STRING "4: Arroz        "
-  STRING "0: Pagina 2     "
-;ChangeFoodMenuTwo:
-;ChangeFoodMenuThree:
-;ChangeFoodMenuFour:
-;ChangeFoodMenuFive:
-;ChangeFoodMenuSix:
-;ChangeFoodMenuSeven:
+
+PLACE 5000H
+InfoOats:
+  STRING "00: Aveia       "
+  STRING "011 056 007     "
+InfoSlicedBread:
+  STRING "01: Pao de forma"
+  STRING "009 042 003     "
+InfoPotatoes:
+  STRING "02: Batata      "
+  STRING "003 019 000     "
+InfoRice:
+  STRING "03: Arroz       "
+  STRING "007 025 000     "
+InfoBeans:
+  STRING "04: Feijao      "
+  STRING "010 013 000     "
+InfoVegetables:
+  STRING "05: Legumes     "
+  STRING "003 007 000     "
+InfoTomato:
+  STRING "06: Tomate      "
+  STRING "001 003 000     "
+InfoBanana:
+  STRING "07: Banana      "
+  STRING "001 023 000     "
+InfoOrange:
+  STRING "08: Laranja     "
+  STRING "001 012 000     "
+InfoApple:
+  STRING "09: Maca        "
+  STRING "001 014 000     "
+InfoKiwi:
+  STRING "10: Kiwi        "
+  STRING "001 015 000     "
+InfoChocolateCookie:
+  STRING "11: Bolacha Choc"
+  STRING "009 059 022     "
+InfoPizza:
+  STRING "12: Pizza       "
+  STRING "013 025 009     "
+InfoAlmonds:
+  STRING "13: Amendoas    "
+  STRING "025 006 055     "
+InfoLinseed:
+  STRING "14: Linhacas    "
+  STRING "018 034 036     "
+InfoOliveOil:
+  STRING "15: Azeite      "
+  STRING "000 000 100     "
+InfoSkimMilk:
+  STRING "16: Leite Magro "
+  STRING "003 004 000     "
+InfoWhey:
+  STRING "17: Whey        "
+  STRING "080 008 004     "
+InfoSalmon:
+  STRING "18: Salmao      "
+  STRING "021 000 015     "
+InfoWhiteFish:
+  STRING "19: Pescada     "
+  STRING "020 000 001     "
+InfoTuna:
+  STRING "20: Atum        "
+  STRING "025 000 002     "
+InfoPork:
+  STRING "21: Porco       "
+  STRING "022 000 015     "
+InfoChicken:
+  STRING "22: Frango      "
+  STRING "025 000 004     "
+InfoTurkey:
+  STRING "23: Peru        "
+  STRING "028 000 001     "
+InfoEgg:
+  STRING "24: Ovo         "
+  STRING "007 000 005     "
+InfoCheese:
+  STRING "25: Queijo      "
+  STRING "028 000 013     "
 
 PLACE 200H
 Init:
