@@ -1,10 +1,10 @@
 ; peripherals
 PWR                         EQU 00H     ; start machine
-SEL_NR_MENU                 EQU 10H     ; selection input
-OK                          EQU 20H     ; confirmation of the user input
-CHANGE                      EQU 30H     ; switch selection
-PESO                        EQU 40H     ; weight input of a food
-NEXT_PAGE                   EQU 50H     ; go to next food page
+SEL_NR_MENU                 EQU 01H     ; selection input
+OK                          EQU 02H     ; confirmation of the user input
+CHANGE                      EQU 03H     ; switch selection
+PESO                        EQU 04H     ; weight input of a food
+NEXT_PAGE                   EQU 05H     ; go to next food page
 ; stack pointer
 STACK_POINTER               EQU F000H
 ; main menu constants
@@ -15,17 +15,13 @@ RESET_DATA                  EQU 3
 REGISTER_FOOD               EQU 2
 UPDATE_WEIGHT               EQU 3
 CHANGE_FOOD                 EQU 4
-; page 1 menu of food constants
-AVEIA                       EQU 1
-PAO_FORMA                   EQU 2
-BATATA                      EQU 3
-ARROZ                       EQU 4
-CHANGE_PAGE                 EQU 0
 ; other constants
 MAX_WEIGHT                  EQU 3000    ; 3000 in hexadecimal
 PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
 FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
 EMPTY_CHARACTER             EQU 20H
+UNDERSCORE_CHARACTER        EQU 5FH
+DOUBLE_UNDERSCORE_CHARACTER EQU 5F5FH
 GO_BACK                     EQU 1
 REGISTER_FOOD_FLAG          EQU 60H
 OK_FLAG                     EQU 70H
@@ -119,12 +115,20 @@ DISPLAY_END_WEIGHT          EQU 0B04H
 PLACE 1000H
 
 MainMenu:
-  STRING "    WMachine    "
   STRING "                "
   STRING "1: Balanca      "
   STRING "2: Ver diário   "
+  STRING "3: Reiniciar    "
+  STRING "                "
+  STRING "PWR:_           "
+  STRING "SEL:__      OK:_"
+waitForPowerMenu:
   STRING "                "
   STRING "                "
+  STRING "                "
+  STRING "                "
+  STRING "                "
+  STRING "PWR:_           "
   STRING "                "
 ErrorMenu:
   STRING "                "
@@ -134,6 +138,14 @@ ErrorMenu:
   STRING "                "
   STRING "1: OK           "
   STRING "                "
+ErrorOverflowMenu:
+  STRING "                "
+  STRING "                "
+  STRING "   Houve uma    "
+  STRING "   excepcao     "
+  STRING "   (overflow)   "
+  STRING "                "
+  STRING "            OK:_"
 ErrorNoFoodSelectedMenu:
   STRING "                "
   STRING " Nao ha nenhum  "
@@ -156,24 +168,32 @@ ResetMenu:
   STRING " Quer reiniciar "
   STRING "   os dados?    "
   STRING "                "
-  STRING "1: Sim          "
-  STRING "2: Nao          "
-registerFoodDiaryMenu:
-  STRING "Alimento:       "
-  STRING "Peso:           "
   STRING "                "
-  STRING "1: OK           "
-  STRING "2: Regista      "
+  STRING "            OK:_"
+registerFoodDiaryMenu:
+  STRING "                "
+  STRING "Alimento:       "
+  STRING "                "
+  STRING "PESO:____ gramas"
+  STRING "CHANGE:_        "
+  STRING "PWR:_           "
+  STRING "MENU:_          "
+changeFoodInfo:
+  STRING "                "
+  STRING "                "
+  STRING "SEL:_           "
+  STRING "OK:_            "
+  STRING ">_              "
   STRING "                "
   STRING "                "
 viewTotalDataMenu:
-  STRING "Proteinas:      "
-  STRING "Hidr. Carb:     "
-  STRING "Gorduras:       "
-  STRING "Calorias:       "
+  STRING "P:____ gramas   "
+  STRING "C:____ gramas   "
+  STRING "F:____ gramas   "
+  STRING "K:____ calorias "
   STRING "                "
-  STRING "1: OK           "
-  STRING "2: Reiniciar    "
+  STRING "PWR:_           "
+  STRING "MENU:_          "
 
 PLACE 5000H
 InfoOats:
