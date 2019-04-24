@@ -1422,49 +1422,18 @@ IsOKActive_end:
   POP R0
   RET
 
-SwitchOKFlag:
-  ;PUSH R0
-  ;PUSH R1
-  ;PUSH R2
-  MOV R1, OK_FLAG
-  MOVB R0, [R1]
-  CMP R0, 0
-  JZ ActivateOKFlag
-  MOV R2, 0
-  MOVB [R1], R2
-  JMP SwitchOKFlag_end
-ActivateOKFlag:
-  MOV R2, 1
-  MOVB [R1], R2
-SwitchOKFlag_end:
-  POP R2
-  POP R1
-  POP R0
-  RET
-
 wipePeripherals:
   PUSH R0
   PUSH R1
   PUSH R2
   PUSH R3
-  PUSH R4
-  PUSH R5
-  ;MOV R0, PWR
-  MOV R1, SEL_NR_MENU
-  MOV R2, OK
-  MOV R3, CHANGE
-  ;MOV R4, PESO
-  MOV R5, 0
-  ;MOVB [R0], R5                        ; wipe PWR input
-  MOVB [R1], R5                         ; wipe selection input
-  MOVB [R2], R5                         ; wipe OK input
-  MOVB [R3], R5                         ; wipe CHANGE input
-  ;MOV [R4], R5                         ; wipe PESO input
-  ;MOV [R4+2], R5
-  ;MOV [R4+4], R5
-  ;MOV [R4+6], R5
-  POP R5
-  POP R4
+  MOV R0, SEL_NR_MENU
+  MOV R1, OK
+  MOV R2, CHANGE
+  MOV R3, 0
+  MOVB [R1], R3                         ; wipe selection input
+  MOVB [R2], R3                         ; wipe OK input
+  MOVB [R3], R3                         ; wipe CHANGE input
   POP R3
   POP R2
   POP R1
