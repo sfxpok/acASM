@@ -8,9 +8,9 @@ NEXT_PAGE                   EQU 05H     ; go to next food page
 ; stack pointer
 STACK_POINTER               EQU F000H
 ; main menu constants
-WEIGHT_MACHINE              EQU 1
-VIEW_TOTAL_DATA             EQU 2
-RESET_DATA                  EQU 3
+WEIGHT_MACHINE              EQU 30H     ; weight machine option
+VIEW_TOTAL_DATA             EQU 31H     ; view total data option
+RESET_DATA                  EQU 32H     ; reset data option
 ; register food diary menu constants
 REGISTER_FOOD               EQU 2
 UPDATE_WEIGHT               EQU 3
@@ -25,6 +25,8 @@ DOUBLE_UNDERSCORE_CHARACTER EQU 5F5FH
 GO_BACK                     EQU 1
 REGISTER_FOOD_FLAG          EQU 60H
 OK_FLAG                     EQU 70H
+NUMBER_ZERO_ASCII           EQU 30H     ; 0 in ASCII
+NUMBER_ONE_ASCII            EQU 31H     ; 1 in ASCII
 ; storage
 SELECTED_FOOD               EQU 130H    ; selected food during runtime
 SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
@@ -97,8 +99,9 @@ TOTAL_CARBOHYDRATES         EQU 0EA4H   ; total consumed carbohydrates
 TOTAL_FATS                  EQU 0EA8H   ; total consumed fats
 
 ; display
-DISPLAY_START               EQU 0A0H     ; position to start the display
-DISPLAY_END                 EQU 10FH     ; position to shut down the display
+DISPLAY_START               EQU 300H    ; position to start the display
+DISPLAY_POSITION_SEVEN      EQU 360H    ; position seven of the display
+DISPLAY_END                 EQU 370H    ; position to end the display
 
 DISPLAY_START_WEIGHT        EQU 0B01H
 DISPLAY_END_WEIGHT          EQU 0B04H
@@ -178,7 +181,7 @@ registerFoodDiaryMenu:
   STRING "CHANGE:_        "
   STRING "PWR:_           "
   STRING "MENU:_          "
-changeFoodInfo:
+changeFoodInfoMenu:
   STRING "                "
   STRING "                "
   STRING "SEL:_           "
@@ -290,9 +293,9 @@ waitForPower:
 waitForPowerLoop:
   MOV R0, PWR                           ; move PWR value to register bank
   MOVB R1, [R0]
-  MOV R2, 31H
+  MOV R2, NUMBER_ONE_ASCII
   CMP R1, R2                            ; is PWR set to 1?
-  JZ main                               ; PWR = 1?
+  JZ main
   JMP waitForPowerLoop
 
 errorMessage:
@@ -384,61 +387,231 @@ drawDisplayWeight: ; TO BE DONE
   ;CALL drawDisplayLoop
   RET
 
-registerFoodDiary: ; TO BE DONE
-  PUSH R0
+readCHANGEButton:
   PUSH R1
   PUSH R2
-registerFoodDiaryLoop:
-  MOV R2, registerFoodDiaryMenu
-  CALL drawDisplay
-  CALL wipePeripherals
-  CALL SwitchRegisterFoodFlag
-  CALL checkOKFlag
-  MOV R0, SEL_NR_MENU
-  MOVB R1, [R0]
-  CMP R1, GO_BACK
-  JEQ main
-  CMP R1, REGISTER_FOOD
-  JEQ registerFoodDiaryLoop_SAVE
-  CALL errorMessage
-  JMP registerFoodDiaryLoop
-registerFoodDiaryLoop_SAVE:
-  CALL checkIfFoodIsSelected
-  CALL checkIfWeightIsSelected
-  ;CALL checkIfOverflow
-  CALL calculateCalories
+  PUSH R3
+readCHANGEButtonLoop:
+  MOV R1, CHANGE                        ; R1 has got PIN value CHANGE
+  MOVB R1, [R1]
+  MOV R2, UNDERSCORE_CHARACTER
+  CMP R1, R2                            ; compares underscore value with CHANGE value
+  JZ readCHANGEButtonLoop               ; if CHANGE is _ it means there is no input
+  MOV R2, NUMBER_ONE_ASCII
+  CMP R1, R2                            ; compares 1 in ASCII with CHANGE value
+  JZ CHANGEValid                        ; if it is true, it means CHANGE is active
+  MOV R2, NUMBER_ZERO_ASCII
+  CMP R1, R2                            ; compares 0 in ASCII with CHANGE value
+  JZ CHANGEValid                        ; if it is true, it means CHANGE is NOT active
+  MOV R1, CHANGE
+  MOV R2, UNDERSCORE_CHARACTER
+  MOVB [R1], R2                         ; overwrites CHANGE value in display with _
+  JMP readCHANGEButtonLoop              ; repeat
+
+CHANGEValid:
+  MOV R0, R1                            ; CHANGE value is stored in R0
+  POP R3
+  POP R2
+  POP R1
   RET
 
-main:
+registerFoodDiary: ; TO BE DONE
+  MOV R10, 0
+  MOV R9, 0
+  MOV R8, 0
+  MOV R7, 0
+
+  MOV R0, registerFoodDiaryMenu
+  CALL drawDisplay
+  CALL readCHANGEButton
+  CALL readPWRButton
+  CMP R3, 1
+  JZ waitForPower
+  MOV R1, NUMBER_ONE_ASCII
+  CMP R0, R1
+  JZ saveData ;CMTabela
+
+saveData:
+  CALL displayFoodTable
+  CALL readFoodChosen                   ; reads food chosen (stored in R3)
+  CALL readOKButton
+
+readFoodChosen:
   PUSH R0
   PUSH R1
   PUSH R2
-mainLoop:
-  MOV R2, MainMenu                      ; get main menu ready
-  CALL drawDisplay                      ; draw display
-  CALL wipePeripherals
-  CALL checkSwitches
-  ;CALL IsOKActive
-  ;CALL checkOKFlag
-  MOV R0, SEL_NR_MENU                   ; move selection value to register bank
-  MOVB R1, [R0]
-  CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
-  JEQ mainLoop_registerFoodDiary
-  CMP R1, VIEW_TOTAL_DATA               ; is selection set to 2?
-  JEQ mainLoop_viewTotalData
-  CALL errorMessage
-  JMP mainLoop
-mainLoop_registerFoodDiary:
-  CALL registerFoodDiary
-  JMP mainLoop
-mainLoop_viewTotalData:
-  CALL viewTotalData
-  JMP mainLoop
-mainLoop_end:
+  PUSH R3
+readFoodChosenLoop:
+  
+
+displayFoodTable:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  PUSH R6
+  PUSH R7
+
+  MOV R0, OPTION_OATS
+  MOV R1, DISPLAY
+  MOV R2, DISPLAY_POSITION_SEVEN
+  MOV R3, DISPLAY_END
+  MOV R4, changeFoodInfoMenu
+displayFoodTableLoop:
+  MOV R2, DISPLAY_POSITION_SEVEN
+  MOV R5, [R0]
+  MOV [R1], R5
+  ADD R0, 2
+  ADD R1, 2
+  CMP R1, R2
+  JNZ displayFoodTableLoop
+  JMP displayReadNextPageLoop
+
+displayNextPageLoop:
+  MOV R1, DISPLAY
+  MOV R6, NEXT_PAGE
+  MOV R7, UNDERSCORE_CHARACTER
+  MOVB [R6], R7
+  JMP displayFoodTable
+displayReadNextPageLoop:
+  MOV R6, NEXT_PAGE
+  MOVB R6, [R6]
+  MOV R7, NUMBER_ONE_ASCII
+  CMP R6, R7
+  JZ displayNextPageLoop
+  MOV R7, NUMBER_ZERO_ASCII
+  CMP R6, R7
+  JZ endChooseFood
+  JNE displayReadNextPageLoop
+endChooseFood:
+  POP R7
+  POP R6
+  POP R5
+  POP R4
+  POP R3
   POP R2
   POP R1
   POP R0
   RET
+
+displayLCTLoop: ; what?
+  MOV R5, [R4]
+  MOV [R2], R5
+  ADD R2, 2
+  ADD R4, 2
+  CMP R2, R3
+  JNZ displayLCTLoop
+
+;registerFoodDiaryLoop:
+  ;MOV R2, registerFoodDiaryMenu
+  ;CALL drawDisplay
+  ;CALL wipePeripherals
+  ;CALL SwitchRegisterFoodFlag
+  ;CALL checkOKFlag
+  ;MOV R0, SEL_NR_MENU
+  ;MOVB R1, [R0]
+  ;CMP R1, GO_BACK
+  ;JEQ main
+  ;CMP R1, REGISTER_FOOD
+  ;JEQ registerFoodDiaryLoop_SAVE
+  ;CALL errorMessage
+  ;JMP registerFoodDiaryLoop
+;registerFoodDiaryLoop_SAVE:
+  ;CALL checkIfFoodIsSelected
+  ;CALL checkIfWeightIsSelected
+  ;CALL checkIfOverflow
+  ;CALL calculateCalories
+  ;RET
+
+readSELButton:
+  PUSH R1
+  PUSH R2
+readSELButtonLoop:
+  MOV R1, SEL_NR_MENU
+  MOVB R1, [R1]
+  MOV R2, UNDERSCORE_CHARACTER
+  CMP R1, R2
+  JZ readSELButton
+  MOV R0, R1
+  POP R2
+  POP R1
+  RET
+
+readOKButton:
+  PUSH R1
+  PUSH R2
+readOKButtonLoop:
+  MOV R1, OK
+  MOVB R1, [R1]
+  MOV R2, NUMBER_ONE_ASCII
+  CMP R1, R2
+  JNE readOKButtonLoop
+  POP R2
+  POP R1
+  RET
+
+readPWRButton:
+  PUSH R1
+  MOV R3, PWR
+  MOVB R3, [R3]
+  MOV R1, NUMBER_ZERO_ASCII
+  CMP R3, R1
+  JNE doNotTurnOffMachine
+  MOV R3, 1
+  POP R1
+  RET
+
+doNotTurnOffMachine:
+  MOV R3, 0
+  POP R1
+  RET
+
+main:
+  CALL wipeDisplay
+  MOV R2, MainMenu                      ; get main menu ready
+  CALL drawDisplay                      ; draw display
+  ;CALL wipePeripherals
+  CALL readSELButton
+  CALL readOKButton
+  CALL readPWRButton
+  ;CALL checkSwitches
+  ;CALL IsOKActive
+  ;CALL checkOKFlag
+  CMP R3, 1
+  JZ waitForPower
+  ;MOV R0, SEL_NR_MENU                   ; move selection value to register bank
+  ;MOVB R1, [R0]
+  ;CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
+  ;JEQ mainLoop_registerFoodDiary
+  ;CMP R1, VIEW_TOTAL_DATA               ; is selection set to 2?
+  ;JEQ mainLoop_viewTotalData
+  ;CALL errorMessage
+  MOV R1, WEIGHT_MACHINE
+  CMP R0, R1
+  JZ registerFoodDiary
+
+  MOV R1, VIEW_TOTAL_DATA
+  CMP R0, R1
+  JZ viewTotalData
+
+  MOV R1, RESET_DATA
+  CMP R0, R1
+  JZ resetFoodData
+
+  JMP mainLoop
+;mainLoop_registerFoodDiary:
+  ;CALL registerFoodDiary
+  ;JMP mainLoop
+;mainLoop_viewTotalData:
+  ;CALL viewTotalData
+  ;JMP mainLoop
+;mainLoop_end:
+  ;POP R2
+  ;POP R1
+  ;POP R0
+  ;RET
 
 checkOKFlag:
   PUSH R0
@@ -636,23 +809,23 @@ checkIfAboveMaxWeight_End:
   RET
 
 drawDisplay:
-  PUSH R0
+  ;PUSH R0
   PUSH R1
   PUSH R2
   PUSH R3
-  MOV R0, DISPLAY_START                 ; beginning of display
-  MOV R1, DISPLAY_END                   ; end of display
+  MOV R1, DISPLAY_START                 ; beginning of display
+  MOV R2, DISPLAY_END                   ; end of display
 drawDisplayLoop:
-  MOV R3, [R2]                          ; get character from requested menu
-  MOV [R0], R3                          ; draw character to display
-  ADD R2, 2                             ; step to next char of menu
-  ADD R0, 2                             ; step to next char of display
-  CMP R0, R1
+  MOV R3, [R0]                          ; get character from requested menu
+  MOV [R1], R3                          ; draw character to display
+  ADD R0, 2                             ; step to next char of menu
+  ADD R1, 2                             ; step to next char of display
+  CMP R1, R2
   JLE drawDisplayLoop                   ; have we reached to the end of the menu?
   POP R3
   POP R2
   POP R1
-  POP R0
+  ;POP R0
   RET
 
 wipeDisplay:
