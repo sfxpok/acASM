@@ -704,6 +704,32 @@ saveMacronutrientsOfChosenFood:
   POP R1
   RET
 
+readWeightInput:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  PUSH R7
+wipeWeight:
+  MOV R6, 0000H
+  MOV R0, PESO
+  MOV R2, UNDERSCORE_CHARACTER
+  MOV R3, 0049H
+wipeWeightLoop:
+  MOVB [R0], R2
+  ADD R0, 1
+  CMP R0, R3
+  JNE wipeWeightLoop
+InitReadWeightInput:
+  MOV R0, PESO
+  MOV R2, UNDERSCORE_CHARACTER
+  MOV R3, 0049H
+  MOV R4, 30H
+  MOV R7, 10
+  MOV R5, 1000
+
 displayFoodTable:
   PUSH R0
   PUSH R1
