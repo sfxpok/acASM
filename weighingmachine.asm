@@ -6,7 +6,7 @@ CHANGE                      EQU 03H     ; switch selection
 PESO                        EQU 04H     ; weight input of a food
 NEXT_PAGE                   EQU 05H     ; go to next food page
 ; stack pointer
-STACK_POINTER               EQU F000H
+STACK_POINTER               EQU 9000H
 ; main menu constants
 WEIGHT_MACHINE              EQU 30H     ; weight machine option
 VIEW_TOTAL_DATA             EQU 31H     ; view total data option
@@ -138,14 +138,14 @@ waitForPowerMenu:
   STRING "                "
   STRING "PWR:_           "
   STRING "                "
-ErrorMenu:
-  STRING "                "
-  STRING "                "
-  STRING "   Houve uma    "
-  STRING "   excepcao     "
-  STRING "                "
-  STRING "1: OK           "
-  STRING "                "
+;ErrorMenu:
+;  STRING "                "
+;  STRING "                "
+;  STRING "   Houve uma    "
+;  STRING "   excepcao     "
+;  STRING "                "
+;  STRING "1: OK           "
+;  STRING "                "
 ErrorOverflowMenu:
   STRING "                "
   STRING "                "
@@ -154,22 +154,22 @@ ErrorOverflowMenu:
   STRING "   (overflow)   "
   STRING "                "
   STRING "            OK:_"
-ErrorNoFoodSelectedMenu:
-  STRING "                "
-  STRING " Nao ha nenhum  "
-  STRING "   alimento     "
-  STRING "  selecionado   "
-  STRING "                "
-  STRING "1: OK           "
-  STRING "                "
-ErrorNoWeightSelectedMenu:
-  STRING "                "
-  STRING " Nao ha nenhum  "
-  STRING "     peso       "
-  STRING "  selecionado   "
-  STRING "                "
-  STRING "1: OK           "
-  STRING "                "
+;ErrorNoFoodSelectedMenu:
+;  STRING "                "
+;  STRING " Nao ha nenhum  "
+;  STRING "   alimento     "
+;  STRING "  selecionado   "
+;  STRING "                "
+;  STRING "1: OK           "
+;  STRING "                "
+;ErrorNoWeightSelectedMenu:
+;  STRING "                "
+;  STRING " Nao ha nenhum  "
+;  STRING "     peso       "
+;  STRING "  selecionado   "
+;  STRING "                "
+;  STRING "1: OK           "
+;  STRING "                "
 ResetMenu:
   STRING "                "
   STRING "                "
@@ -302,6 +302,48 @@ waitForPowerLoop:
   CMP R1, R2                            ; is PWR set to 1?
   JZ main
   JMP waitForPowerLoop
+
+main:
+  CALL wipeDisplay
+  MOV R2, MainMenu                      ; get main menu ready
+  CALL drawDisplay                      ; draw display
+  ;CALL wipePeripherals
+  CALL readSELButton
+  CALL readOKButton
+  CALL readPWRButton
+  ;CALL checkSwitches
+  ;CALL IsOKActive
+  ;CALL checkOKFlag
+  CMP R3, 1
+  JZ waitForPower
+  ;MOV R0, SEL_NR_MENU                   ; move selection value to register bank
+  ;MOVB R1, [R0]
+  ;CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
+  ;JEQ mainLoop_registerFoodDiary
+  ;CMP R1, VIEW_TOTAL_DATA               ; is selection set to 2?
+  ;JEQ mainLoop_viewTotalData
+  ;CALL errorMessage
+  MOV R1, WEIGHT_MACHINE
+  CMP R0, R1
+  JZ registerFoodDiary
+  MOV R1, VIEW_TOTAL_DATA
+  CMP R0, R1
+  JZ viewTotalData
+  MOV R1, RESET_DATA
+  CMP R0, R1
+  JZ resetFoodData
+  JMP mainLoop
+;mainLoop_registerFoodDiary:
+  ;CALL registerFoodDiary
+  ;JMP mainLoop
+;mainLoop_viewTotalData:
+  ;CALL viewTotalData
+  ;JMP mainLoop
+;mainLoop_end:
+  ;POP R2
+  ;POP R1
+  ;POP R0
+  ;RET
 
 errorMessage:
   PUSH R0
@@ -440,6 +482,40 @@ saveData:
   CALL displayFoodTable
   CALL readFoodChosen                   ; reads food chosen (stored in R3)
   CALL readOKButton
+
+  MOV R0, registerFoodDiaryMenu
+  CALL drawDisplay
+  CALL displayChosenFood
+
+  MOV R5, 0
+  CALL saveMacronutrientsOfChosenFood
+  CALL readWeightInput
+  CALL readPWRButton
+  CMP R3, 1
+  JZ waitForPower
+
+  CALL ComputeMacronutritionalValues
+  CMP R5, 1
+  JZ
+
+OverflowWarning:
+  CALL wipeDisplay
+  MOV R0, ErrorOverflowMenu
+  CALL drawDisplay
+  CALL Timer
+  CALL wipeDisplay
+  JMP registerFoodDiary
+
+readMenu:
+  CALL readSELButton
+  CMP R0, 0
+  JZ registerFoodDiary
+  CMP R0, 1
+  JMP main
+  MOV R0, SEL_NR_MENU
+  MOV R1, UNDERSCORE_CHARACTER
+  MOVB [R0], R1
+  JMP readMenu
 
 readFoodChosen:
   PUSH R0
@@ -749,7 +825,7 @@ readWeightInputLoop:
   JNE readWeightInputLoop
 
 checkForOverflow:
-  MOV 25, 2000H
+  MOV R5, 2000H
   CMP R6, R5
   JGT wipeWeight
 
@@ -1128,51 +1204,6 @@ doNotTurnOffMachine:
   POP R1
   RET
 
-main:
-  CALL wipeDisplay
-  MOV R2, MainMenu                      ; get main menu ready
-  CALL drawDisplay                      ; draw display
-  ;CALL wipePeripherals
-  CALL readSELButton
-  CALL readOKButton
-  CALL readPWRButton
-  ;CALL checkSwitches
-  ;CALL IsOKActive
-  ;CALL checkOKFlag
-  CMP R3, 1
-  JZ waitForPower
-  ;MOV R0, SEL_NR_MENU                   ; move selection value to register bank
-  ;MOVB R1, [R0]
-  ;CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
-  ;JEQ mainLoop_registerFoodDiary
-  ;CMP R1, VIEW_TOTAL_DATA               ; is selection set to 2?
-  ;JEQ mainLoop_viewTotalData
-  ;CALL errorMessage
-  MOV R1, WEIGHT_MACHINE
-  CMP R0, R1
-  JZ registerFoodDiary
-
-  MOV R1, VIEW_TOTAL_DATA
-  CMP R0, R1
-  JZ viewTotalData
-
-  MOV R1, RESET_DATA
-  CMP R0, R1
-  JZ resetFoodData
-
-  JMP mainLoop
-;mainLoop_registerFoodDiary:
-  ;CALL registerFoodDiary
-  ;JMP mainLoop
-;mainLoop_viewTotalData:
-  ;CALL viewTotalData
-  ;JMP mainLoop
-;mainLoop_end:
-  ;POP R2
-  ;POP R1
-  ;POP R0
-  ;RET
-
 checkOKFlag:
   PUSH R0
   PUSH R1
@@ -1225,26 +1256,6 @@ IsCHANGEActive_end:
   POP R0
   RET
 
-checkSwitches:
-  PUSH R0
-  PUSH R1
-checkSwitchesLoop:
-  CALL checkPWR
-  CALL IsCHANGEActive
-  ;CALL IsOKActive
-
-  PUSH R0
-  PUSH R1
-  MOV R0, OK
-  MOVB R1, [R0]
-  CMP R1, 1
-  JNE checkSwitchesLoop
-  POP R1
-  POP R0
-  POP R1
-  POP R0
-  RET
-
 checkPWR:
   PUSH R0
   PUSH R1
@@ -1261,109 +1272,6 @@ checkPWR:
   POP R0
   CALL main
 checkPWR_end:
-  POP R1
-  POP R0
-  RET
-
-SwitchRegisterFoodFlag:
-  PUSH R0
-  PUSH R1
-  PUSH R2
-  MOV R1, REGISTER_FOOD_FLAG
-  MOVB R0, [R1]
-  CMP R0, 0
-  JZ ActivateRegisterFoodFlag
-  MOV R2, 0
-  MOVB [R1], R2
-  JMP SwitchRegisterFoodFlag_end
-ActivateRegisterFoodFlag:
-  MOV R2, 1
-  MOVB [R1], R2
-SwitchRegisterFoodFlag_end:
-  POP R2
-  POP R1
-  POP R0
-  RET
-
-changeFoodOne:
-  PUSH R0
-  PUSH R1
-  PUSH R9
-changeFoodOneLoop:
-  MOV R2, ChangeFoodMenuOne
-  CALL drawDisplay
-  CALL wipePeripherals
-  CALL checkOKFlag
-  MOV R0, SEL_NR_MENU
-  MOVB R1, [R0]
-  CALL SaveSelectedFoodToMemory
-  POP R9
-  POP R1
-  POP R0
-  RET
-
-SaveSelectedFoodToMemory:
-  MOV R9, SELECTED_FOOD
-  MOVB [R9], R1
-  RET
-
-calculateCalories: ; TO BE DONE
-  PUSH R0
-  PUSH R1
-  PUSH R6
-  PUSH R7
-  PUSH R8
-  PUSH R9
-  MOV R0, PROTEIN_CARB_MULTIPLICAND
-  MOV R1, FAT_MULTIPLICAND
-  MUL R0, R6                            ; protein * 4
-  MUL R0, R7                            ; carbs * 4
-  MUL R1, R8                            ; fat * 9
-  ADD R9, R6                            ; kcal + protein_kcal
-  ADD R9, R7                            ; kcal + protein_carbs
-  ADD R9, R8                            ; kcal + protein_fat
-  POP R9
-  POP R8
-  POP R7
-  POP R6
-  POP R1
-  POP R0
-  RET
-
-resetFoodData: ; TO BE DONE
-  PUSH R0
-  PUSH R1
-
-;roundGrams:
-
-;checkIfOverflow:
-  ;PUSH R0
-  ;PUSH R1
-  ;MOV R0, R6                            ; R6 - P
-  ;JV errorMessage
-  ;MOV R0, R7                            ; R7 - C
-  ;JV errorMessage
-  ;MOV R0, R8                            ; R8 - F
-  ;JV errorMessage
-  ;MOV R0, R9                            ; R9 - K
-  ;JV errorMessage
-  ;POP R1
-  ;POP R0
-  ;RET
-
-checkIfAboveMaxWeight: ; UNTESTED
-  PUSH R0
-  PUSH R1
-  PUSH R10
-  MOV R10, SELECTED_WEIGHT              ; get weight of the food from R10
-  MOVB R0, [R10]
-  MOV R1, MAX_WEIGHT
-  CMP R0, R1
-  JLT checkIfAboveMaxWeight_End
-  MOV R0, 0                             ; weight is above 3000, therefore, set weight to 0
-  MOVB [R10], R0
-checkIfAboveMaxWeight_End:
-  POP R10
   POP R1
   POP R0
   RET
