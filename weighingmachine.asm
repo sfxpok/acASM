@@ -100,6 +100,11 @@ TOTAL_FATS                  EQU 0EA8H   ; total consumed fats
 
 ; display
 DISPLAY_START               EQU 300H    ; position to start the display
+DISPLAY_POSITION_TWO        EQU 310H    ; position two of the display
+DISPLAY_POSITION_THREE      EQU 320H    ; position three of the display
+DISPLAY_POSITION_FOUR       EQU 330H    ; position four of the display
+DISPLAY_POSITION_FIVE       EQU 340H    ; position five of the display
+DISPLAY_POSITION_SIX        EQU 350H    ; position six of the display
 DISPLAY_POSITION_SEVEN      EQU 360H    ; position seven of the display
 DISPLAY_END                 EQU 370H    ; position to end the display
 
@@ -591,6 +596,112 @@ FoodChoiceDone:
   POP R2
   POP R1
   POP R0
+  RET
+
+displayChosenFood:
+  PUSH R1
+  PUSH R2
+  PUSH R4
+  MOV R1, DISPLAY_POSITION_THREE
+  MOV R2, DISPLAY_POSITION_FOUR
+  ADD R10, 2
+  SUB R2, 2
+displayChosenFoodLoop:
+  MOV R4, [R10]
+  MOV [R1], R4
+  ADD R10, 2
+  ADD R1, 2
+  CMP R1, R2
+  JNZ displayChosenFoodLoop
+  POP R4
+  POP R2
+  POP R1
+  RET
+
+saveMacronutrientsOfChosenFood:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+
+  MOV R3, R10
+  MOV R2, 30H                           ; warning
+
+  MOVB R3, [R3]
+  SUB R3, R2
+  MOV R1, 100
+  MUL R3, R1
+  ADD R9, R3
+
+  MOV R3, R10                           ; first macronutrient (?)
+  ADD R3, 1
+  MOVB R3, [R3]
+  SUB R3, R2
+  MOV R1, 10
+  MUL R3, R1
+  ADD R9, R3
+
+  MOV R3, R10
+  ADD R3, 2
+  MOVB R3, [R3]
+  SUB R3, R2
+  ADD R9, R3
+
+  MOV R3, R10                           ; next macronutrient
+  ADD R3, 5
+
+  MOVB R3, [R3]
+  SUB R3, R2
+  MOV R1, 100
+  MUL R3, R1
+  ADD R8, R3
+
+  MOV R3, R10
+  ADD R3, 6
+  MOVB R3, [R3]
+  SUB R3, R2
+  MOV R1, 10
+  MUL R3, R1
+  ADD R8, R3
+
+  MOV R3, R10
+  ADD R3, 7
+  MOVB R3, [R3]
+  SUB R3, R2
+  ADD R8, R3
+
+  MOV R3, R10                           ; next macronutrient
+  MOV R4, 10
+  ADD R3, R4
+
+  MOVB R3, [R3]
+  SUB R3, R2
+  MOV R1, 100
+  MUL R3, R1
+  ADD R7, R3
+
+  MOV R3, R10
+  MOV R4, 11
+  ADD R3, R4
+  MOVB R3, [R3]
+  SUB R3, R2
+  MOV R1, 10
+  MUL R3, R1
+  ADD R7, R3
+
+  MOV R3, R10
+  MOV R4, 12
+  ADD R3, R4
+  MOVB R3, [R3]
+  SUB R3, R2
+  ADD R7, R3
+
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
   RET
 
 displayFoodTable:
