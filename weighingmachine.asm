@@ -729,6 +729,280 @@ InitReadWeightInput:
   MOV R4, 30H
   MOV R7, 10
   MOV R5, 1000
+checkWeightInput:
+  MOVB R1, [R0]
+  CMP R1, R2
+  JZ checkWeightInput
+  ADD R0, 1
+  CMP R0, R3
+  JNE checkWeightInput
+  MOV R0, PESO
+readWeightInputLoop:
+  MOVB R1, [R0]
+  SUB R1, R4
+  MUL R1, R5
+  ADD R6, R1
+
+  DIV R5, R7
+  ADD R0, 1
+  CMP R0, R3
+  JNE readWeightInputLoop
+
+checkForOverflow:
+  MOV 25, 2000H
+  CMP R6, R5
+  JGT wipeWeight
+
+  POP R7
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+ComputeMacronutritionalValues:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+
+  MOV R0, INIT_CONSUMED_TABLE
+  MOV R2, 100
+  MOV R3, 50
+  MUL R9, R6
+  JC EndCarry
+  JV EndCarry
+  MUL R8, R6
+  JC EndCarry
+  JV EndCarry
+  MUL R7, R6
+  JC EndCarry
+  JV EndCarry
+
+  MOV R1, [R0]
+
+  MOV R4, R9
+  MOV R5, R9
+  DIV R4, R2
+  MOD R5, R2
+  CMP R5, R3
+  JLT doNotRoundProtein
+  ADD R4, 1
+
+doNotRoundProtein:
+  ADD R1, R4
+  JC EndCarry
+  JV EndCarry
+  MOV [R0], R1
+  ADD R0, 4
+  MOV R1, [R0]
+
+  MOV R4, R8
+  MOV R5, R8
+  DIV R4, R2
+  MOD R5, R2
+  CMP R5, R3
+  JLT doNotRoundCarb
+  ADD R4, 1
+
+doNotRoundCarb:
+  ADD R1, R4
+  JC EndCarry
+  JV EndCarry
+  MOV [R0], R1
+
+  ADD R0, 4
+  MOV R1, [R0]
+
+  MOV R4, R7
+  MOV R5, R7
+  DIV R4, R2
+  MOD R5, R2
+  CMP R5, R3
+  JLT doNotRoundFats
+  ADD R4, 1
+
+doNotRoundFats:
+  ADD R1, R4
+  JC EndCarry
+  JV EndCarry
+  MOV [R0], R1
+
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+EndCarry:
+  MOV R9, 0
+  MOV R8, 0
+  MOV R7, 0
+  MOV R4, 0
+  MOV R5, 1
+
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+Timer:
+  PUSH R0
+  PUSH R1
+
+  MOV R0, TIME_CONSTANT
+  MOV R1, 00A0H
+
+RaiseTimer:
+  SUB R0, 1
+  MOV [R1], R0
+  CMP R0, 0
+  JNE RaiseTimer
+
+  POP R1
+  POP R0
+  RET
+
+SaveMacronutrientsAndCalories:
+  PUSH R4
+  PUSH R6
+
+  MOV R10, 0
+  MOV R9, TOTAL_PROTEIN
+  MOV R9, [R9]
+
+  MOV R8, TOTAL_CARBOHYDRATES
+  MOV R8, [R8]
+  MOV R7, TOTAL_FATS
+  MOV R7, [R7]
+
+  MOV R6, R9
+  MOV R4, 4
+  MUL R6, R4
+  ADD R10, R6
+
+  MOV R6, R8
+  MUL R6, R4
+  ADD R10, R6
+
+  MOV R6, R7
+  MOV R4, 9
+  MUL R6, R4
+  ADD R10, R6
+
+  POP R4
+  POP R6
+  RET
+
+ConvertToASCIICharacter:
+  PUSH R0
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+
+  MOV R0, 10
+  ADD R2, 3
+  MOV R3, 0
+
+NextASCIICharacter:
+  MOV R4, R1
+  MOD R4, R0
+  MOV R5, 48
+  ADD R5, R4
+  MOV R4, R2
+  MOVB [R4], R5
+  SUB R2, 1
+  ADD R3, 1
+  CMP R3, 4
+  JEQ EndASCIIConversion
+  DIV R1, R0
+  CMP R1, 0
+  JNE NextASCIICharacter
+
+FillEmptyCharacters:
+  MOV R5, EMPTY_CHARACTER
+  MOV R4, R2
+  MOVB [R4], R5
+  SUB R2, 1
+  ADD R3, 1
+  CMP R3, 4
+  JNE FillEmptyCharacters
+
+EndASCIIConversion:
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R0
+  RET
+
+ResetDataTimer:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  PUSH R3
+
+  MOV R0, ResetMenu
+  CALL drawDisplay
+  MOV R0, OK
+  MOV R2, 250H
+  MOV R3, NUMBER_ONE_ASCII
+ResetDataLoop:
+  SUB R2, 1
+  MOVB R1, [R0]
+  CMP R1, R3
+  JZ CancelResetData
+  CMP R2, 0
+  JZ EndResetDataTimer
+  JMP ResetDataLoop
+
+CancelResetData:
+  MOV R5, 1
+  POP R3
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+EndResetDataTimer:
+  MOV R5, 0
+  POP R3
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+wipeTotalData:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+
+  MOV R9, 0
+  MOV R8, 0
+  MOV R7, 0
+  MOV R6, 0
+  MOV R5, 0
+
+  MOV R0, INIT_CONSUMED_TABLE
+  MOV R1, 0DB0H
+  MOV R2, 0
+wipeTotalDataLoop:
+  MOVB [R0], R2
+  ADD R0, 1
+  CMP R0, R1
+  JNZ wipeTotalDataLoop
+
+  POP R2
+  POP R1
+  POP R0
+  RET
 
 displayFoodTable:
   PUSH R0
@@ -1115,7 +1389,7 @@ drawDisplayLoop:
   RET
 
 wipeDisplay:
-  PUSH R0
+  ;PUSH R0
   PUSH R1
   PUSH R2
   PUSH R3
@@ -1130,7 +1404,7 @@ wipeDisplayLoop:
   POP R3
   POP R2
   POP R1
-  POP R0
+  ;POP R0
   RET
 
 IsOKActive:
