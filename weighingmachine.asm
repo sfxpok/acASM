@@ -18,7 +18,7 @@ RESET_DATA                  EQU 33H     ; reset data option
 EMPTY_CHARACTER             EQU 20H
 UNDERSCORE_CHARACTER        EQU 5FH
 DOUBLE_UNDERSCORE_CHARACTER EQU 5F5FH
-GO_BACK                     EQU 1
+;GO_BACK                     EQU 1
 NUMBER_ZERO_ASCII           EQU 30H     ; 0 in ASCII
 NUMBER_ONE_ASCII            EQU 31H     ; 1 in ASCII
 TIME_CONSTANT               EQU 250H
@@ -47,8 +47,8 @@ DISPLAY_POSITION_FOUR       EQU 0030H    ; position four of the display
 DISPLAY_POSITION_SEVEN      EQU 0060H    ; position seven of the display
 DISPLAY_END                 EQU 0070H    ; position to end the display
 
-DISPLAY_START_WEIGHT        EQU 0B01H
-DISPLAY_END_WEIGHT          EQU 0B04H
+;DISPLAY_START_WEIGHT        EQU 0B01H
+;DISPLAY_END_WEIGHT          EQU 0B04H
 
 ; reserved registers
 ; R10: weight of the food
