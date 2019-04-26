@@ -1,64 +1,61 @@
-; peripherals
-PWR                         EQU 0007H     ; start machine
-SEL_NR_MENU                 EQU 0064H     ; selection input
-OK                          EQU 006AH     ; confirmation of the user input
-CHANGE                      EQU 0037H     ; switch selection
-PESO                        EQU 0045H     ; weight input of a food
-NEXT_PAGE                   EQU 006EH     ; go to next food page
-; stack pointer
-STACK_POINTER               EQU 5000H
-; main menu constants
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; input peripherals
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+ONOFF                       EQU 0007H   ; start machine
+SEL_NR_MENU                 EQU 0064H   ; selection input
+OK                          EQU 006AH   ; confirmation of the user input
+CHANGE                      EQU 0037H   ; switch selection
+PESO                        EQU 0045H   ; weight input of a food
+NEXT_PAGE                   EQU 006EH   ; go to next food page
+
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; main menu options
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 WEIGHT_MACHINE              EQU 31H     ; weight machine option
 VIEW_TOTAL_DATA             EQU 32H     ; view total data option
 RESET_DATA                  EQU 33H     ; reset data option
-; other constants
-;MAX_WEIGHT                  EQU 3000    ; 3000 in hexadecimal
-;PROTEIN_CARB_MULTIPLICAND   EQU 4       ; obtain protein and carbs in calories
-;FAT_MULTIPLICAND            EQU 9       ; obtain fats in calories
+
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; other definitions
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+STACK_POINTER               EQU 5000H
 EMPTY_CHARACTER             EQU 20H
 UNDERSCORE_CHARACTER        EQU 5FH
 DOUBLE_UNDERSCORE_CHARACTER EQU 5F5FH
-;GO_BACK                     EQU 1
 NUMBER_ZERO_ASCII           EQU 30H     ; 0 in ASCII
 NUMBER_ONE_ASCII            EQU 31H     ; 1 in ASCII
-TIME_CONSTANT               EQU 250H
-; storage
-;SELECTED_FOOD               EQU 130H    ; selected food during runtime
-;SELECTED_WEIGHT             EQU 120H    ; weight input (PESO)
-
-;BASE_DIARY_FOOD             EQU 1000H   ; base address of the food diary
-
-; other food table memory addresses
+TIME_CONSTANT               EQU 250H    ; meant to be used for the timer to countdown
 END_FOOD_TABLE              EQU 2340H   ; memory address of the end of the food table
 
-; consumed nutrients table
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; consumed nutrients data
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 INIT_CONSUMED_TABLE         EQU 0DA0H   ; memory address of the beginning of the total consumed nutrients table
 TOTAL_PROTEIN               EQU 0DA0H   ; total consumed protein
 TOTAL_CARBOHYDRATES         EQU 0DA4H   ; total consumed carbohydrates
 TOTAL_FATS                  EQU 0DA8H   ; total consumed fats
 
-; display
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; memory addresses to display the machine screen
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 DISPLAY_START               EQU 0000H    ; position to start the display
 DISPLAY_POSITION_TWO        EQU 0010H    ; position two of the display
 DISPLAY_POSITION_THREE      EQU 0020H    ; position three of the display
 DISPLAY_POSITION_FOUR       EQU 0030H    ; position four of the display
-;DISPLAY_POSITION_FIVE       EQU 0040H    ; position five of the display
-;DISPLAY_POSITION_SIX        EQU 0050H    ; position six of the display
+DISPLAY_POSITION_FIVE       EQU 0040H    ; position five of the display
+DISPLAY_POSITION_SIX        EQU 0050H    ; position six of the display
 DISPLAY_POSITION_SEVEN      EQU 0060H    ; position seven of the display
 DISPLAY_END                 EQU 0070H    ; position to end the display
 
-;DISPLAY_START_WEIGHT        EQU 0B01H
-;DISPLAY_END_WEIGHT          EQU 0B04H
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; options for food names
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-; reserved registers
-; R10: weight of the food
-; R9: selected food
-; R8: calories
-; R7: fats
-; R6: carbohydrates
-; R5: protein
-
-; food table (options)
 OPTION_OATS                 EQU 3030H   ; option to choose oats
 OPTION_SLICED_BREAD         EQU 3031H   ; option to choose sliced bread
 OPTION_POTATOES             EQU 3032H   ; option to choose potatoes
@@ -86,7 +83,10 @@ OPTION_TURKEY               EQU 3233H   ; option to choose turkey
 OPTION_EGG                  EQU 3234H   ; option to choose egg
 OPTION_CHEESE               EQU 3235H   ; option to choose cheese
 
-; food table (display names)
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; memory addresses of food names
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 NAME_OATS                   EQU 4000H   ; memory address of oats
 NAME_SLICED_BREAD           EQU 4020H   ; memory address of sliced bread
 NAME_POTATOES               EQU 4040H   ; memory address of potatoes
@@ -114,10 +114,13 @@ NAME_TURKEY                 EQU 42E0H   ; memory address of turkey
 NAME_EGG                    EQU 4300H   ; memory address of egg
 NAME_CHEESE                 EQU 4320H   ; memory address of cheese
 
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 ; display menus
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 PLACE 0A00H
 MainMenu:
-  STRING "PWRRRR:_        "
+  STRING "ON/OFF:_        "
   STRING "1: Balanca      "
   STRING "2: Ver diario   "
   STRING "3: Reiniciar    "
@@ -127,21 +130,14 @@ MainMenu:
 
 PLACE 0E70H
 waitForPowerMenu:
-  STRING "PWRRRR:_        "
+  STRING "ON/OFF:_        "
   STRING "                "
   STRING "                "
   STRING "                "
   STRING "                "
   STRING "                "
   STRING "                "
-;ErrorMenu:
-;  STRING "                "
-;  STRING "                "
-;  STRING "   Houve uma    "
-;  STRING "   excepcao     "
-;  STRING "                "
-;  STRING "1: OK           "
-;  STRING "                "
+
 PLACE 0DE0H
 ErrorOverflowMenu:
   STRING "                "
@@ -151,22 +147,7 @@ ErrorOverflowMenu:
   STRING "   (overflow)   "
   STRING "                "
   STRING "                "
-;ErrorNoFoodSelectedMenu:
-;  STRING "                "
-;  STRING " Nao ha nenhum  "
-;  STRING "   alimento     "
-;  STRING "  selecionado   "
-;  STRING "                "
-;  STRING "1: OK           "
-;  STRING "                "
-;ErrorNoWeightSelectedMenu:
-;  STRING "                "
-;  STRING " Nao ha nenhum  "
-;  STRING "     peso       "
-;  STRING "  selecionado   "
-;  STRING "                "
-;  STRING "1: OK           "
-;  STRING "                "
+
 PLACE 0D00H
 ResetMenu:
   STRING "                "
@@ -179,7 +160,7 @@ ResetMenu:
 
 PLACE 0B00H
 registerFoodDiaryMenu:
-  STRING "PWRRRR:_        "
+  STRING "ON/OFF:_        "
   STRING "Alimento:       "
   STRING "                "
   STRING "CHANGE:_        "
@@ -193,13 +174,17 @@ changeFoodInfoMenu:
 
 PLACE 0C00H
 viewTotalDataMenu:
-  STRING "PWRRRR:_        "
+  STRING "ON/OFF:_        "
   STRING "P:____ g        "
   STRING "C:____ g        "
   STRING "F:____ g        "
   STRING "                "
   STRING "K:____ kcal     "
   STRING "MENU_           "
+
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; food info displayed
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 PLACE 2000H
 InfoOats:
@@ -281,6 +266,10 @@ InfoCheese:
   STRING "25: Queijo      "
   STRING "028 000 013     "
 
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; instructions
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 PLACE 0000H
 Init:
   JMP Startup
@@ -289,85 +278,84 @@ PLACE 0300H
 Startup:
   MOV SP, STACK_POINTER                 ; set stack pointer ready
 
-waitForPower: ; desligado
-  MOV R0, waitForPowerMenu
-  CALL drawDisplay
-waitForPowerLoop: ; ciclodesligado
-  MOV R0, PWR                           ; move PWR value to register bank
+waitForPower:
+  MOV R0, waitForPowerMenu              ; get menu while power is off
+  CALL drawDisplay                      ; draw display with ONOFF input
+waitForPowerLoop:
+  MOV R0, ONOFF                         ; move ONOFF value to R0
   MOVB R0, [R0]
-  MOV R1, NUMBER_ONE_ASCII
-  CMP R0, R1                            ; is PWR set to 1?
-  JZ main
-  JMP waitForPowerLoop
+  MOV R1, NUMBER_ONE_ASCII              ; send 1 in ASCII format to R1
+  CMP R0, R1                            ; compare R0 with R1
+  JZ main                               ; jump is done if machine is turned on
+  JMP waitForPowerLoop                  ; if machine is not turned on, keep checking
 
-main: ; cicloprincipal
-  CALL wipeDisplay
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; main program of the weight machine
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+main:
+  CALL wipeDisplay                      ; clean display
   MOV R0, MainMenu                      ; get main menu ready
   CALL drawDisplay                      ; draw display
-  ;CALL wipePeripherals
-  CALL readSELButton
-  CALL readOKButton
-  CALL readPWRButton
-  ;CALL checkSwitches
-  ;CALL IsOKActive
-  ;CALL checkOKFlag
-  CMP R3, 1
-  JZ waitForPower
-  ;MOV R0, SEL_NR_MENU                   ; move selection value to register bank
-  ;MOVB R1, [R0]
-  ;CMP R1, WEIGHT_MACHINE                ; is selection set to 1?
-  ;JEQ mainLoop_registerFoodDiary
-  ;CMP R1, VIEW_TOTAL_DATA               ; is selection set to 2?
-  ;JEQ mainLoop_viewTotalData
-  ;CALL errorMessage
-  MOV R1, WEIGHT_MACHINE
-  CMP R0, R1
-  JZ registerFoodDiary
-  MOV R1, VIEW_TOTAL_DATA
-  CMP R0, R1
-  JZ viewTotalData
-  MOV R1, RESET_DATA
-  CMP R0, R1
-  JZ resetFoodData
+  CALL readSELButton                    ; read SEL_NR_MENU input
+  CALL readOKButton                     ; read OK input
+  CALL readONOFFButton                  ; read ONOFF input (is the machine on?)
+  CMP R3, 1                             ; checks if the machine is actually turned on
+  JZ waitForPower                       ; if the machine is not on, jump and standby for power
+
+  MOV R1, WEIGHT_MACHINE                ; send 1 in ASCII format to R1
+  CMP R0, R1                            ; compare SEL input with R1
+  JZ registerFoodDiary                  ; if the input is 1, go to the requested routine
+
+  MOV R1, VIEW_TOTAL_DATA               ; send 2 in ASCII format to R1
+  CMP R0, R1                            ; compare SEL input with R1
+  JZ viewTotalData                      ; if the input is 2, go to the requested routine
+
+  MOV R1, RESET_DATA                    ; send 3 in ASCII format to R1
+  CMP R0, R1                            ; compare SEL input with R1
+  JZ resetFoodData                      ; if the input is 3, go to the requested routine
+
+  JMP main                              ; stays in this loop if no correct input was given
+
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; see recorded data along with the macronutrients
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+viewTotalData:
+  MOV R2, viewTotalDataMenu             ; get menu ready
+  CALL drawDisplay                      ; draw menu on the display
+  CALL SaveMacronutrientsAndCalories    ; save recorded diary macronutrients
+
+  MOV R1, R9                            ; get the value to convert to R1
+  MOV R2, 12H                           ; move least significant bit position on the display
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCII
+
+  MOV R1, R8                            ; get the value to convert to R1
+  MOV R2, 22H                           ; move least significant bit position on the displa
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCI
+
+  MOV R1, R7                            ; get the value to convert to R1
+  MOV R2, 32H                           ; move least significant bit position on the displa
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCI
+
+  MOV R1, R10                           ; get the value to convert to R1
+  MOV R2, 52H                           ; move least significant bit position on the displa
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCI
+
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; reset all recorded data so far
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+resetFoodData:
+  CALL ResetDataTimer                   ; starts ticking timer to reset data
+  CMP R5, 1                             ; compares R5 with 1
+  JZ main                               ; if the above is true, it means we will not reset data
+  CALL wipeTotalData                    ; otherwise, reset the data
   JMP main
-;mainLoop_registerFoodDiary:
-  ;CALL registerFoodDiary
-  ;JMP mainLoop
-;mainLoop_viewTotalData:
-  ;CALL viewTotalData
-  ;JMP mainLoop
-;mainLoop_end:
-  ;POP R2
-  ;POP R1
-  ;POP R0
-  ;RET
 
-viewTotalData: ; RotinaTOTALD
-  MOV R2, viewTotalDataMenu
-  CALL drawDisplay
-  CALL SaveMacronutrientsAndCalories
-  MOV R1, R9
-  MOV R2, 12H
-  CALL ConvertToASCIICharacter
-
-  MOV R1, R8
-  MOV R2, 22H
-  CALL ConvertToASCIICharacter
-
-  MOV R1, R7
-  MOV R2, 32H
-  CALL ConvertToASCIICharacter
-
-  MOV R1, R10
-  MOV R2, 52H
-  CALL ConvertToASCIICharacter
-
-resetFoodData: ; RotinaReset
-  CALL ResetDataTimer
-  CMP R5, 1
-  JZ main
-  CALL wipeTotalData
-  JMP main
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; read CHANGE button input
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 readCHANGEButton:
   PUSH R1
@@ -397,43 +385,63 @@ CHANGEValid:
   POP R1
   RET
 
-registerFoodDiary: ; RotinaBALANCA
-  MOV R10, 0
-  MOV R9, 0
-  MOV R8, 0
-  MOV R7, 0
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; routine to weigh and select food
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  MOV R0, registerFoodDiaryMenu
-  CALL drawDisplay
-  CALL readCHANGEButton
-  CALL readPWRButton
-  CMP R3, 1
-  JZ waitForPower
-  MOV R1, NUMBER_ONE_ASCII
-  CMP R0, R1
-  JZ saveData
+; R10 will save the selected food
+; R9 will save the protein of the selected food
+; R8 will save the carbohydrates of the selected food
+; R7 will save the fats of the selected food
+
+registerFoodDiary:
+  MOV R10, 0                            ; wipe R10
+  MOV R9, 0                             ; wipe R9
+  MOV R8, 0                             ; wipe R8
+  MOV R7, 0                             ; wipe R7
+
+  MOV R0, registerFoodDiaryMenu         ; get menu to display
+  CALL drawDisplay                      ; draw the menu on display
+  CALL readCHANGEButton                 ; read CHANGE input
+  CALL readONOFFButton                  ; read ONOFF input
+  CMP R3, 1                             ; checks if the machine is actually turned on
+  JZ waitForPower                       ; if the machine is not on, jump and standby for power
+  MOV R1, NUMBER_ONE_ASCII              ; send 1 in ASCII format to R1
+  CMP R0, R1                            ; check if CHANGE input button is active
+  JZ saveData                           ; jump to saveData if the above is true
 
 saveData: ; CMTabela
-  CALL displayFoodTable
+  CALL displayFoodTable                 ; send food table to display
   CALL readFoodChosen                   ; reads food chosen (stored in R3)
-  CALL readOKButton
+  CALL readOKButton                     ; read OK input
 
-  MOV R0, registerFoodDiaryMenu
-  CALL drawDisplay
-  CALL displayChosenFood
+  MOV R0, registerFoodDiaryMenu         ; get menu to display
+  CALL drawDisplay                      ; draw the menu on display
+  CALL displayChosenFood                ; draw chosen food on display
 
-  MOV R5, 0
-  CALL saveMacronutrientsOfChosenFood
-  CALL readWeightInput
-  CALL readPWRButton
-  CMP R3, 1
-  JZ waitForPower
+  MOV R5, 0                             ; wipe R5 (R5 is meant to verify if there is overflow)
+  CALL saveMacronutrientsOfChosenFood   ; saves macronutrients of chosen food
+  CALL readWeightInput                  ; gets ready to read weight input
+  CALL readONOFFButton                  ; reads ONOFF button
+  CMP R3, 1                             ; checks if the machine is actually turned on
+  JZ waitForPower                       ; if the machine is not on, jump and standby for power
 
-  CALL ComputeMacronutritionalValues
-  CMP R5, 1
-  JZ OverflowWarning
+  CALL ComputeMacronutritionalValues    ; computes macronutrients along with the weight of the food
+  CMP R5, 1                             ; checks if there is overflow
+  JZ OverflowWarning                    ; if the above is true, there IS overflow
 
-OverflowWarning: ; AvisaExcesso
+readMenu:
+  CALL readSELButton                    ; read SEL_NR_MENU input
+  CMP R0, 0                             ; compares SEL input with 0
+  JZ registerFoodDiary                  ; if the above is true, it means there is no selection
+  CMP R0, 1                             ; compares SEL input with 1
+  JMP main                              ; if the above is true, jump to main menu
+  MOV R0, SEL_NR_MENU                   ; send SEL_NR_MENU input value to R0
+  MOV R1, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R1
+  MOVB [R0], R1                         ; wipes selection input on display
+  JMP readMenu                          ; repeat loop
+
+OverflowWarning:
   CALL wipeDisplay
   MOV R0, ErrorOverflowMenu
   CALL drawDisplay
@@ -441,19 +449,6 @@ OverflowWarning: ; AvisaExcesso
   CALL wipeDisplay
   JMP registerFoodDiary
 
-readMenu: ; LeMenu
-  CALL readSELButton
-  CALL readPWRButton
-  CMP R3, 1
-  JZ waitForPower
-  CMP R0, 0
-  JZ registerFoodDiary
-  CMP R0, 1
-  JMP main
-  MOV R0, SEL_NR_MENU
-  MOV R1, UNDERSCORE_CHARACTER
-  MOVB [R0], R1
-  JMP readMenu
 
 displayChosenFood: ; MostraAlimento
   PUSH R1
@@ -805,22 +800,22 @@ ResetDataTimer:
   PUSH R2
   PUSH R3
 
-  MOV R0, ResetMenu
-  CALL drawDisplay
-  MOV R0, OK
-  MOV R2, 250H
-  MOV R3, NUMBER_ONE_ASCII
+  MOV R0, ResetMenu                     ; get menu to display
+  CALL drawDisplay                      ; draw display
+  MOV R0, OK                            ; get OK input
+  MOV R2, TIME_CONSTANT                 ; get timer constant to countdown
+  MOV R3, NUMBER_ONE_ASCII              ; send 1 in ASCII format to R3
 ResetDataLoop:
-  SUB R2, 1
-  MOVB R1, [R0]
-  CMP R1, R3
-  JZ CancelResetData
-  CMP R2, 0
-  JZ EndResetDataTimer
-  JMP ResetDataLoop
+  SUB R2, 1                             ; subtract 1 to the timer (to countdown)
+  MOVB R1, [R0]                         ; sends OK input value to R1
+  CMP R1, R3                            ; checks whether OK is 1 or not
+  JZ CancelResetData                    ; if OK is 1, jump to cancel reset data
+  CMP R2, 0                             ; otherwise, check if the timer has ran out
+  JZ EndResetDataTimer                  ; if the timer is over, jump to reset data
+  JMP ResetDataLoop                     ; repeat this loop
 
 CancelResetData:
-  MOV R5, 1
+  MOV R5, 1                             ; 1 is sent to R5 to cancel the data reset
   POP R3
   POP R2
   POP R1
@@ -828,7 +823,7 @@ CancelResetData:
   RET
 
 EndResetDataTimer:
-  MOV R5, 0
+  MOV R5, 0                             ; 0 is sent to keep the intention to reset data
   POP R3
   POP R2
   POP R1
@@ -922,12 +917,12 @@ readSELButton:
   PUSH R1
   PUSH R2
 readSELButtonLoop:
-  MOV R1, SEL_NR_MENU
+  MOV R1, SEL_NR_MENU                   ; send SEL_NR_MENU input value to R1
   MOVB R1, [R1]
-  MOV R2, UNDERSCORE_CHARACTER
-  CMP R1, R2
-  JZ readSELButton
-  MOV R0, R1
+  MOV R2, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R2
+  CMP R1, R2                            ; compares SEL value with _
+  JZ readSELButton                      ; if the above is 0, it means there is no input
+  MOV R0, R1                            ; R0 keeps the SEL input
   POP R2
   POP R1
   RET
@@ -945,9 +940,9 @@ readOKButtonLoop:
   POP R1
   RET
 
-readPWRButton:
+readONOFFButton:
   PUSH R1
-  MOV R3, PWR
+  MOV R3, ONOFF
   MOVB R3, [R3]
   MOV R1, NUMBER_ZERO_ASCII
   CMP R3, R1
