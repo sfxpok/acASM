@@ -442,112 +442,115 @@ readMenu:
   JMP readMenu                          ; repeat loop
 
 OverflowWarning:
-  CALL wipeDisplay
-  MOV R0, ErrorOverflowMenu
-  CALL drawDisplay
-  CALL Timer
-  CALL wipeDisplay
-  JMP registerFoodDiary
+  CALL wipeDisplay                      ; clean display
+  MOV R0, ErrorOverflowMenu             ; get overflow menu
+  CALL drawDisplay                      ; draw display
+  CALL Timer                            ; start countdown of the timer
+  CALL wipeDisplay                      ; clean display
+  JMP registerFoodDiary                 ; jump back to weight machine
 
-
-displayChosenFood: ; MostraAlimento
+displayChosenFood:
   PUSH R1
   PUSH R2
   PUSH R4
-  MOV R1, DISPLAY_POSITION_THREE
-  MOV R2, DISPLAY_POSITION_FOUR
-  ADD R10, 2
-  SUB R2, 2
-displayChosenFoodLoop: ; CicloMostraAlimento !!! BUGGY !!!
-  MOV R4, [R10]
-  MOV [R1], R4
-  ADD R10, 2
-  ADD R1, 2
-  CMP R1, R2
-  JNZ displayChosenFoodLoop
+  MOV R1, DISPLAY_POSITION_THREE        ; position three of display
+  MOV R2, DISPLAY_POSITION_FOUR         ; position four of display
+  ADD R10, 2                            ; add 2 to R10
+  SUB R2, 2                             ; subtract 2 to R2
+displayChosenFoodLoop:
+  MOV R4, [R10]                         ; get the food (R3) and save it on R4
+  MOV [R1], R4                          ; place the first character on display
+  ADD R10, 2                            ; go to next character
+  ADD R1, 2                             ; go to next character
+  CMP R1, R2                            ; compare R1 with R2 to check if we have reached to the end
+  JNZ displayChosenFoodLoop             ; if the above is true, keep advancing characters
   POP R4
   POP R2
   POP R1
   RET
 
-saveMacronutrientsOfChosenFood: ; GuardaNutri
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; save macronutrients of the food on the registers
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+saveMacronutrientsOfChosenFood:
   PUSH R1
   PUSH R2
   PUSH R3
   PUSH R4
   PUSH R5
 
-  MOV R3, R10
-  MOV R2, 30H                           ; warning
+  MOV R3, R10                           ; moves the end of the value to R3
+  MOV R2, NUMBER_ZERO_ASCII             ; moves 0 in ASCII to subtract
 
   MOVB R3, [R3]
-  SUB R3, R2
-  MOV R1, 100
-  MUL R3, R1
-  ADD R9, R3
+  SUB R3, R2                            ; subtract 0 to pass ASCII to hexadecimal
+  MOV R1, 100                           ; send 100 to R1
+  MUL R3, R1                            ; multiply to get the value in the hundreds
+  ADD R9, R3                            ; stores the result on R9
 
   MOV R3, R10                           ; first macronutrient (?)
-  ADD R3, 1
+  ADD R3, 1                             ; sum 1 to R3 to check the dozens
   MOVB R3, [R3]
-  SUB R3, R2
-  MOV R1, 10
-  MUL R3, R1
-  ADD R9, R3
+  SUB R3, R2                            ; subtract 0 to pass ASCII to hexadecimal
+  MOV R1, 10                            ; move 10 to R1
+  MUL R3, R1                            ; multiply with R3 to get dozens
+  ADD R9, R3                            ; sum the value to the total of the nutrient
 
-  MOV R3, R10
-  ADD R3, 2
+  MOV R3, R10                           ; units
+  ADD R3, 2                             ; add 2 to R3
   MOVB R3, [R3]
-  SUB R3, R2
-  ADD R9, R3
+  SUB R3, R2                            ; subtract R2 with R3
+  ADD R9, R3                            ; sum R3 with R9
 
   MOV R3, R10                           ; next macronutrient
-  ADD R3, 5
+  ADD R3, 5                             ; add 5 to R3
 
-  MOVB R3, [R3]
-  SUB R3, R2
-  MOV R1, 100
-  MUL R3, R1
-  ADD R8, R3
+  MOVB R3, [R3]                         ; hundreds
+  SUB R3, R2                            ; subtract R2 with R3
+  MOV R1, 100                           ; send 100 to R1
+  MUL R3, R1                            ; multiply R3 with R1
+  ADD R8, R3                            ; sum the value to the total of the nutrient
 
-  MOV R3, R10
-  ADD R3, 6
+  MOV R3, R10                           ; dozens
+  ADD R3, 6                             ; add 6 to R3
   MOVB R3, [R3]
-  SUB R3, R2
-  MOV R1, 10
-  MUL R3, R1
-  ADD R8, R3
+  SUB R3, R2                            ; subtract R2 with R3
+  MOV R1, 10                            ; move 10 to R1
+  MUL R3, R1                            ; multiply with R3 to get dozens
+  ADD R8, R3                            ; sum the value to the total of the nutrient
 
-  MOV R3, R10
-  ADD R3, 7
+  MOV R3, R10                           ; units
+  ADD R3, 7                             ; add 7 to R3
   MOVB R3, [R3]
-  SUB R3, R2
-  ADD R8, R3
+  SUB R3, R2                            ; subtract R2 with R3
+  ADD R8, R3                            ; add R3 with R8
 
   MOV R3, R10                           ; next macronutrient
-  MOV R4, 10
-  ADD R3, R4
+  MOV R4, 10                            ; move 10 to R4
+  ADD R3, R4                            ; add R3 with R4
 
-  MOVB R3, [R3]
-  SUB R3, R2
-  MOV R1, 100
-  MUL R3, R1
-  ADD R7, R3
+  MOVB R3, [R3]                         ; hundreds
+  SUB R3, R2                            ; subtract R2 with R3
+  MOV R1, 100                           ; move 100 to R1
+  MUL R3, R1                            ; multiply R3 with R1
+  ADD R7, R3                            ; add R3 with R7
 
-  MOV R3, R10
-  MOV R4, 11
-  ADD R3, R4
+  MOV R3, R10                           ; dozens
+  MOV R4, 11                            ; move 11 to R4
+  ADD R3, R4                            ; add R3 with R4
   MOVB R3, [R3]
-  SUB R3, R2
-  MOV R1, 10
-  MUL R3, R1
-  ADD R7, R3
+  SUB R3, R2                            ; subtract R2 with R3
+  MOV R1, 10                            ; move 10 to R1
+  MUL R3, R1                            ; multiply with R3 to get dozens
+  ADD R7, R3                            ; sum the value to the total of the nutrient
 
-  MOV R3, R10
-  MOV R4, 12
-  ADD R3, R4
+  MOV R3, R10                           ; units
+  MOV R4, 12                            ; moves 12 to R4
+  ADD R3, R4                            ; add R3 with R4
   MOVB R3, [R3]
-  SUB R3, R2
-  ADD R7, R3
+  SUB R3, R2                            ; subtract R2 with R3
+  ADD R7, R3                            ; add R3 with R7
 
   POP R5
   POP R4
@@ -556,7 +559,7 @@ saveMacronutrientsOfChosenFood: ; GuardaNutri
   POP R1
   RET
 
-readWeightInput: ; LePeso
+readWeightInput:
   PUSH R0
   PUSH R1
   PUSH R2
@@ -565,45 +568,45 @@ readWeightInput: ; LePeso
   PUSH R5
   PUSH R7
 wipeWeight:
-  MOV R6, 0000H
-  MOV R0, PESO
-  MOV R2, UNDERSCORE_CHARACTER
-  MOV R3, 0049H
+  MOV R6, 0000H                         ; wipe total
+  MOV R0, PESO                          ; move PESO input to R0
+  MOV R2, UNDERSCORE_CHARACTER          ; move _ to R2
+  MOV R3, 0049H                         ; move the least significant number to R3
 wipeWeightLoop:
-  MOVB [R0], R2
-  ADD R0, 1
-  CMP R0, R3
-  JNE wipeWeightLoop
+  MOVB [R0], R2                         ; move the underscore to the PESO input value
+  ADD R0, 1                             ; advance one cell
+  CMP R0, R3                            ; check if the wipe is done
+  JNE wipeWeightLoop                    ; if the above is not done, repeat the loop
 StartReadingWeightInput:
-  MOV R0, PESO
-  MOV R2, UNDERSCORE_CHARACTER
-  MOV R3, 0049H
-  MOV R4, 30H
-  MOV R7, 10
-  MOV R5, 1000
+  MOV R0, PESO                          ; move PESO input address to R0
+  MOV R2, UNDERSCORE_CHARACTER          ; move _ in ASCII format
+  MOV R3, 0049H                         ; address on the right side of PESO on display
+  MOV R4, 30H                           ; move 30H to R4 to convert ASCII to hexadecimal
+  MOV R7, 10                            ; dividend
+  MOV R5, 1000                          ; multiplicand
 checkWeightInput:
   MOVB R1, [R0]
-  CMP R1, R2
-  JZ checkWeightInput
-  ADD R0, 1
-  CMP R0, R3
-  JNE checkWeightInput
-  MOV R0, PESO
-readWeightInputLoop: ; CicloLePeso
+  CMP R1, R2                            ; check if a weight cell is empty (comparison with underscore)
+  JZ checkWeightInput                   ; if the above is true, repeat the loop
+  ADD R0, 1                             ; otherwise, advance one cell
+  CMP R0, R3                            ; check if we have reached the end of the PESO cells in the memory
+  JNE checkWeightInput                  ; if the above is true, repeat the loop
+  MOV R0, PESO                          ; move PESO input to R0 to check for the thousands
+readWeightInputLoop:
   MOVB R1, [R0]
-  SUB R1, R4
-  MUL R1, R5
-  ADD R6, R1
+  SUB R1, R4                            ; subtract to convert ASCII to hexadecimal
+  MUL R1, R5                            ; multiply R1 by 1000
+  ADD R6, R1                            ; sum to the total
 
-  DIV R5, R7
-  ADD R0, 1
-  CMP R0, R3
-  JNE readWeightInputLoop
+  DIV R5, R7                            ; divide R5 by 10
+  ADD R0, 1                             ; advance one cell on the input PESO
+  CMP R0, R3                            ; check if we have reached the end of the cells
+  JNE readWeightInputLoop               ; if the above is true, repeat the loop
 
-checkForOverflow: ; VerificaExcesso
-  MOV R5, 3000H
-  CMP R6, R5
-  JGT wipeWeight
+checkForOverflow:
+  MOV R5, 3000H                         ; move 3000H to R5. 3000 represents 3000g (3kg)
+  CMP R6, R5                            ; compare 3000 with the total on R6
+  JGT wipeWeight                        ; if the above is true, it means there is overflow
 
   POP R7
   POP R5
@@ -614,16 +617,16 @@ checkForOverflow: ; VerificaExcesso
   POP R0
   RET
 
-ComputeMacronutritionalValues: ; CalcNutri
+ComputeMacronutritionalValues:
   PUSH R0
   PUSH R1
   PUSH R2
   PUSH R3
   PUSH R4
 
-  MOV R0, INIT_CONSUMED_TABLE
-  MOV R2, 100
-  MOV R3, 50
+  MOV R0, INIT_CONSUMED_TABLE           ; move the starting point of the consumed (nutrients, weight) table to R0
+  MOV R2, 100                           ; dividend
+  MOV R3, 50                            ; if the rest of the integer division of the macronutrient by 100 is greater than R5, the macronutrient is rounded
   MUL R9, R6
   JC EndCarry
   JV EndCarry
