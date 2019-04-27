@@ -627,64 +627,64 @@ ComputeMacronutritionalValues:
   MOV R0, INIT_CONSUMED_TABLE           ; move the starting point of the consumed (nutrients, weight) table to R0
   MOV R2, 100                           ; dividend
   MOV R3, 50                            ; if the rest of the integer division of the macronutrient by 100 is greater than R5, the macronutrient is rounded
-  MUL R9, R6
-  JC EndCarry
-  JV EndCarry
-  MUL R8, R6
-  JC EndCarry
-  JV EndCarry
-  MUL R7, R6
-  JC EndCarry
-  JV EndCarry
+  MUL R9, R6                            ; protein * weight
+  JC EndCarry                           ; jump and set R5 to 1 if there is carry
+  JV EndCarry                           ; jump and set R5 to 1 if there is overflow
+  MUL R8, R6                            ; carbohydrates * weight
+  JC EndCarry                           ; jump and set R5 to 1 if there is carry
+  JV EndCarry                           ; jump and set R5 to 1 if there is overflow
+  MUL R7, R6                            ; fats * weight
+  JC EndCarry                           ; jump and set R5 to 1 if there is carry
+  JV EndCarry                           ; jump and set R5 to 1 if there is overflow
 
-  MOV R1, [R0]
+  MOV R1, [R0]                          ; move whatever's on the total data to R1
 
-  MOV R4, R9
-  MOV R5, R9
-  DIV R4, R2
-  MOD R5, R2
-  CMP R5, R3
-  JLT doNotRoundProtein
-  ADD R4, 1
+  MOV R4, R9                            ; keep a copy of R9 in R4
+  MOV R5, R9                            ; keep a copy of R9 in R5
+  DIV R4, R2                            ; divide the value of R4 by 100
+  MOD R5, R2                            ; save the integer division result of the value of R5 by R2 (R2 is 100)
+  CMP R5, R3                            ; compare R5 with 50
+  JLT doNotRoundProtein                 ; if R5 is below 50 it does not need rounding
+  ADD R4, 1                             ; if it is above 50, add 1 to the integer part of the division (R4)
 
-doNotRoundProtein: ; NArrProteina
-  ADD R1, R4
-  JC EndCarry
-  JV EndCarry
-  MOV [R0], R1
-  ADD R0, 4
-  MOV R1, [R0]
+doNotRoundProtein:
+  ADD R1, R4                            ; sum the integer part of the division (with rounding, if applicable)
+  JC EndCarry                           ; jump and set R5 to 1 if there is carry
+  JV EndCarry                           ; jump and set R5 to 1 if there is overflow
+  MOV [R0], R1                          ; move back to the memory
+  ADD R0, 4                             ; go to next column
+  MOV R1, [R0]                          ; move the value in R0 (carbohydrates) to R1
 
-  MOV R4, R8
-  MOV R5, R8
-  DIV R4, R2
-  MOD R5, R2
-  CMP R5, R3
-  JLT doNotRoundCarb
-  ADD R4, 1
+  MOV R4, R8                            ; keep a copy of R8 in R4
+  MOV R5, R8                            ; keep a copy of R8 in R5
+  DIV R4, R2                            ; divide the value of R4 by 100
+  MOD R5, R2                            ; save the integer division result of the value of R5 by R2 (R2 is 100)
+  CMP R5, R3                            ; compare R5 with 50
+  JLT doNotRoundCarb                    ; if R5 is below 50 it does not need rounding
+  ADD R4, 1                             ; if it is above 50, add 1 to the integer part of the division (R4)
 
-doNotRoundCarb: ; NArrHCarb
-  ADD R1, R4
-  JC EndCarry
-  JV EndCarry
-  MOV [R0], R1
+doNotRoundCarb:
+  ADD R1, R4                            ; sum the integer part of the division (with rounding, if applicable)
+  JC EndCarry                           ; jump and set R5 to 1 if there is carry
+  JV EndCarry                           ; jump and set R5 to 1 if there is overflow
+  MOV [R0], R1                          ; move back to the memory
 
-  ADD R0, 4
-  MOV R1, [R0]
+  ADD R0, 4                             ; go to next column
+  MOV R1, [R0]                          ; move the value in R0 (fats) to R1
 
-  MOV R4, R7
-  MOV R5, R7
-  DIV R4, R2
-  MOD R5, R2
-  CMP R5, R3
-  JLT doNotRoundFats
-  ADD R4, 1
+  MOV R4, R7                            ; keep a copy of R7 in R4
+  MOV R5, R7                            ; keep a copy of R7 in R5
+  DIV R4, R2                            ; divide the value of R4 by 100
+  MOD R5, R2                            ; save the integer division result of the value of R5 by R2 (R2 is 100)
+  CMP R5, R3                            ; compare R5 with 50
+  JLT doNotRoundFats                    ; if R5 is below 50 it does not need rounding
+  ADD R4, 1                             ; if it is above 50, add 1 to the integer part of the division (R4)
 
 doNotRoundFats: ; NArrGord
-  ADD R1, R4
-  JC EndCarry
-  JV EndCarry
-  MOV [R0], R1
+  ADD R1, R4                            ; sum the integer part of the division (with rounding, if applicable)
+  JC EndCarry                           ; jump and set R5 to 1 if there is carry
+  JV EndCarry                           ; jump and set R5 to 1 if there is overflow
+  MOV [R0], R1                          ; move back to the memory
 
   POP R4
   POP R3
@@ -693,12 +693,12 @@ doNotRoundFats: ; NArrGord
   POP R0
   RET
 
-EndCarry: ; FimCarryOver
-  MOV R9, 0
-  MOV R8, 0
-  MOV R7, 0
-  MOV R4, 0
-  MOV R5, 1
+EndCarry:
+  MOV R9, 0                             ; wipe protein
+  MOV R8, 0                             ; wipe carbohydrates
+  MOV R7, 0                             ; wipe fats
+  MOV R4, 0                             ; wipe aux register
+  MOV R5, 1                             ; set R5 to 1 (this means there is carry or overflow)
 
   POP R4
   POP R3
@@ -711,45 +711,47 @@ Timer:
   PUSH R0
   PUSH R1
 
-  MOV R0, TIME_CONSTANT
-  MOV R1, 00A0H
+  MOV R0, TIME_CONSTANT                 ; move time constant to R0
+  MOV R1, 00A0H                         ; get timer coordinates?
 
 RaiseTimer:
-  SUB R0, 1
-  MOV [R1], R0
-  CMP R0, 0
-  JNE RaiseTimer
+  SUB R0, 1                             ; countdown the timer
+  MOV [R1], R0                          ; update the timer on display
+  CMP R0, 0                             ; check if we have reached the end of the timer
+  JNE RaiseTimer                        ; if the above is false, repeat loop
 
   POP R1
   POP R0
   RET
 
-SaveMacronutrientsAndCalories: ; GuardaTotais
+SaveMacronutrientsAndCalories:
   PUSH R4
   PUSH R6
 
-  MOV R10, 0
-  MOV R9, TOTAL_PROTEIN
-  MOV R9, [R9]
+  MOV R10, 0                            ; move 0 to R10
+  MOV R9, TOTAL_PROTEIN                 ; move the address of total protein to R9
+  MOV R9, [R9]                          ; move the content of the address to R9
 
-  MOV R8, TOTAL_CARBOHYDRATES
-  MOV R8, [R8]
-  MOV R7, TOTAL_FATS
-  MOV R7, [R7]
+  MOV R8, TOTAL_CARBOHYDRATES           ; move the address of total carbohydrates to R9
+  MOV R8, [R8]                          ; move the content of the address to R8
+  MOV R7, TOTAL_FATS                    ; move the address of total fats to R9
+  MOV R7, [R7]                          ; move the content of the address to R7
 
-  MOV R6, R9
-  MOV R4, 4
-  MUL R6, R4
-  ADD R10, R6
+  ; CALCULATE CALORIES
 
-  MOV R6, R8
-  MUL R6, R4
-  ADD R10, R6
+  MOV R6, R9                            ; keep a copy of R9 on R6
+  MOV R4, 4                             ; move 4 to R4
+  MUL R6, R4                            ; multiply the copied value on R6 by 4
+  ADD R10, R6                           ; sum to the total of calories
 
-  MOV R6, R7
-  MOV R4, 9
-  MUL R6, R4
-  ADD R10, R6
+  MOV R6, R8                            ; keep a copy of R8 on R6
+  MUL R6, R4                            ; multiply the copied value on R6 by 4
+  ADD R10, R6                           ; sum to the total of calories
+
+  MOV R6, R7                            ; keep a copy of R7 on R6
+  MOV R4, 9                             ; move 9 to R4
+  MUL R6, R4                            ; multiply the copied value of R6 by 9
+  ADD R10, R6                           ; sum to the total of calories
 
   POP R4
   POP R6
@@ -763,31 +765,31 @@ ConvertToASCIICharacter:
   PUSH R5
 
   MOV R0, 10
-  ADD R2, 3
-  MOV R3, 0
+  ADD R2, 3                             ; position of the character to fill (least significant)
+  MOV R3, 0                             ; R3 has got the tota value of filled characters
 NextASCIICharacter:
   MOV R4, R1
   MOD R4, R0
-  MOV R5, 48
-  ADD R5, R4
-  MOV R4, R2
-  MOVB [R4], R5
-  SUB R2, 1
-  ADD R3, 1
-  CMP R3, 4
-  JEQ EndASCIIConversion
-  DIV R1, R0
+  MOV R5, 48                            ; get decimal value to convert to ASCII
+  ADD R5, R4                            ; get character to fill display
+  MOV R4, R2                            ; get display address
+  MOVB [R4], R5                         ; place character on display
+  SUB R2, 1                             ; go to next position to fill
+  ADD R3, 1                             ; increment number of filled characters
+  CMP R3, 4                             ; verify if everything is filled
+  JEQ EndASCIIConversion                ; if the above is true, jump
+  DIV R1, R0                            ; integer division by 10
   CMP R1, 0
-  JNE NextASCIICharacter
+  JNE NextASCIICharacter                ; if the quotient of the division by 10 is not null, go to next character
 
 FillEmptyCharacters:
   MOV R5, EMPTY_CHARACTER
-  MOV R4, R2
-  MOVB [R4], R5
-  SUB R2, 1
-  ADD R3, 1
-  CMP R3, 4
-  JNE FillEmptyCharacters
+  MOV R4, R2                            ; get address of display
+  MOVB [R4], R5                         ; place character on display
+  SUB R2, 1                             ; go to next position to fill
+  ADD R3, 1                             ; increment number of filled characters
+  CMP R3, 4                             ; verify if everything is filled
+  JNE FillEmptyCharacters               ; if the above is true, repeat loop
 
 EndASCIIConversion:
   POP R5
@@ -838,20 +840,20 @@ wipeTotalData:
   PUSH R1
   PUSH R2
 
-  MOV R9, 0
-  MOV R8, 0
-  MOV R7, 0
-  MOV R6, 0
-  MOV R5, 0
+  MOV R9, 0                             ; wipe protein
+  MOV R8, 0                             ; wipe carbohydrates
+  MOV R7, 0                             ; wipe fats
+  MOV R6, 0                             ; wipe weight input
+  MOV R5, 0                             ; wipe aux variable that controls something...
 
-  MOV R0, INIT_CONSUMED_TABLE
-  MOV R1, 0DB0H
-  MOV R2, 0
+  MOV R0, INIT_CONSUMED_TABLE           ; sends the beginning of the consumed table to R0
+  MOV R1, 0DB0H                         ; send 0DB0H to R1
+  MOV R2, 0                             ; send 0 to R2
 wipeTotalDataLoop:
-  MOVB [R0], R2
-  ADD R0, 1
-  CMP R0, R1
-  JNZ wipeTotalDataLoop
+  MOVB [R0], R2                         ; wipe display
+  ADD R0, 1                             ; increment to wipe total data
+  CMP R0, R1                            ; compare the line of cells wiped out with the last line of cells
+  JNZ wipeTotalDataLoop                 ; if the above is true, repeat loop
 
   POP R2
   POP R1
@@ -868,43 +870,43 @@ displayFoodTable:
   PUSH R6
   PUSH R7
 
-  MOV R0, InfoOats
+  MOV R0, InfoOats                      ; first food to be displayed is oats (send to R0)
   MOV R1, DISPLAY_START
   MOV R2, DISPLAY_POSITION_SEVEN
   MOV R3, DISPLAY_END
-  MOV R4, changeFoodInfoMenu
+  MOV R4, changeFoodInfoMenu            ; display menu of 1 line with options to choose food
 displayLCTLoop: ; what?
-  MOV R5, [R4]
-  MOV [R2], R5
-  ADD R2, 2
-  ADD R4, 2
-  CMP R2, R3
-  JNZ displayLCTLoop
+  MOV R5, [R4]                          ; place in R5 the line with the menu options
+  MOV [R2], R5                          ; place in the LAST line the menu options (from R5)
+  ADD R2, 2                             ; go to right
+  ADD R4, 2                             ; go to right
+  CMP R2, R3                            ; check if we have reached to the end
+  JNZ displayLCTLoop                    ; if the above is true, repeat loop
 displayFoodTableLoop:
-  MOV R2, DISPLAY_POSITION_SEVEN
-  MOV R5, [R0]
-  MOV [R1], R5
-  ADD R0, 2
-  ADD R1, 2
-  CMP R1, R2
-  JNZ displayFoodTableLoop
+  MOV R2, DISPLAY_POSITION_SEVEN        ; LAST line of the display
+  MOV R5, [R0]                          ; get what is on the menu (R0) and sends it to R5
+  MOV [R1], R5                          ; place first character on display
+  ADD R0, 2                             ; go to next character
+  ADD R1, 2                             ; go to next character
+  CMP R1, R2                            ; compare to check if we have reached to the end
+  JNZ displayFoodTableLoop              ; if the above is true, repeat loop
   JMP displayReadNextPageLoop
 displayNextPageLoop:
   MOV R1, DISPLAY_START
-  MOV R6, NEXT_PAGE
-  MOV R7, UNDERSCORE_CHARACTER
-  MOVB [R6], R7
+  MOV R6, NEXT_PAGE                     ; place on R6 the address of the input peripheral to go to next page
+  MOV R7, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R7
+  MOVB [R6], R7                         ; place a _ in ASCII format on the value of the address of R7
   JMP displayFoodTable
 displayReadNextPageLoop:
-  MOV R6, NEXT_PAGE
-  MOVB R6, [R6]
-  MOV R7, NUMBER_ONE_ASCII
-  CMP R6, R7
-  JZ displayNextPageLoop
-  MOV R7, NUMBER_ZERO_ASCII
-  CMP R6, R7
-  JZ endChooseFood
-  JNE displayReadNextPageLoop
+  MOV R6, NEXT_PAGE                     ; place on R6 the address of the input peripheral to go to next page
+  MOVB R6, [R6]                         ; read the input peripheral value above (NEXT_PAGE)
+  MOV R7, NUMBER_ONE_ASCII              ; get 1 in ASCII format
+  CMP R6, R7                            ; check if input peripheral is 1
+  JZ displayNextPageLoop                ; if the above is true, go to next page
+  MOV R7, NUMBER_ZERO_ASCII             ; get 0 in ASCII format
+  CMP R6, R7                            ; check if input peripheral is 0
+  JZ endChooseFood                      ; if the above is true, it means we have picked the food
+  JNE displayReadNextPageLoop           ; otherwise, repeat the loop
 endChooseFood: ; ciclofimpg
   POP R7
   POP R6
