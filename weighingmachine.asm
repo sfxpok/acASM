@@ -7,7 +7,7 @@ SEL_NR_MENU                 EQU 0064H   ; selection input
 OK                          EQU 006AH   ; confirmation of the user input
 CHANGE                      EQU 0037H   ; switch selection
 PESO                        EQU 0045H   ; weight input of a food
-NEXT_PAGE                   EQU 006EH   ; go to next food page
+NEXT_PAGE                   EQU 006DH   ; go to next food page
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 ; main menu options
@@ -151,11 +151,11 @@ ErrorOverflowMenu:
 PLACE 0D00H
 ResetMenu:
   STRING "                "
-  STRING "                "
   STRING " Quer reiniciar "
   STRING "   os dados?    "
-  STRING "                "
-  STRING "                "
+  STRING "Se nao, carregue"
+  STRING "   no OK para   "
+  STRING "    cancelar    "
   STRING "       OK:_     "
 
 PLACE 0B00H
@@ -322,25 +322,39 @@ main:
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 viewTotalData:
-  MOV R2, viewTotalDataMenu             ; get menu ready
+  MOV R0, viewTotalDataMenu             ; get menu ready
   CALL drawDisplay                      ; draw menu on the display
   CALL SaveMacronutrientsAndCalories    ; save recorded diary macronutrients
 
   MOV R1, R9                            ; get the value to convert to R1
   MOV R2, 12H                           ; move least significant bit position on the display
-  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCII
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCIII
 
   MOV R1, R8                            ; get the value to convert to R1
-  MOV R2, 22H                           ; move least significant bit position on the displa
-  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCI
+  MOV R2, 22H                           ; move least significant bit position on the display
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCII
 
   MOV R1, R7                            ; get the value to convert to R1
-  MOV R2, 32H                           ; move least significant bit position on the displa
-  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCI
+  MOV R2, 32H                           ; move least significant bit position on the display
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCII
 
   MOV R1, R10                           ; get the value to convert to R1
-  MOV R2, 52H                           ; move least significant bit position on the displa
-  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCI
+  MOV R2, 52H                           ; move least significant bit position on the display
+  CALL ConvertToASCIICharacter          ; convert the value inside the register to ASCII
+
+readMenu:
+  CALL readSELButton                    ; read SEL_NR_MENU input
+  CALL readONOFFButton
+  CMP R3, 1
+  JZ waitForPower
+  CMP R0, 0                             ; compares SEL input with 0
+  JZ registerFoodDiary                  ; if the above is true, it means there is no selection
+  CMP R0, 1                             ; compares SEL input with 1
+  JMP main                              ; if the above is true, jump to main menu
+  MOV R0, SEL_NR_MENU                   ; send SEL_NR_MENU input value to R0
+  MOV R1, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R1
+  MOVB [R0], R1                         ; wipes selection input on display
+  JMP readMenu                          ; repeat loop
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 ; reset all recorded data so far
@@ -430,17 +444,6 @@ saveData: ; CMTabela
   CMP R5, 1                             ; checks if there is overflow
   JZ OverflowWarning                    ; if the above is true, there IS overflow
 
-readMenu:
-  CALL readSELButton                    ; read SEL_NR_MENU input
-  CMP R0, 0                             ; compares SEL input with 0
-  JZ registerFoodDiary                  ; if the above is true, it means there is no selection
-  CMP R0, 1                             ; compares SEL input with 1
-  JMP main                              ; if the above is true, jump to main menu
-  MOV R0, SEL_NR_MENU                   ; send SEL_NR_MENU input value to R0
-  MOV R1, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R1
-  MOVB [R0], R1                         ; wipes selection input on display
-  JMP readMenu                          ; repeat loop
-
 OverflowWarning:
   CALL wipeDisplay                      ; clean display
   MOV R0, ErrorOverflowMenu             ; get overflow menu
@@ -449,7 +452,7 @@ OverflowWarning:
   CALL wipeDisplay                      ; clean display
   JMP registerFoodDiary                 ; jump back to weight machine
 
-displayChosenFood:
+displayChosenFood: ; BUGGY
   PUSH R1
   PUSH R2
   PUSH R4
@@ -457,7 +460,7 @@ displayChosenFood:
   MOV R2, DISPLAY_POSITION_FOUR         ; position four of display
   ADD R10, 2                            ; add 2 to R10
   SUB R2, 2                             ; subtract 2 to R2
-displayChosenFoodLoop:
+displayChosenFoodLoop: ; BUGGY
   MOV R4, [R10]                         ; get the food (R3) and save it on R4
   MOV [R1], R4                          ; place the first character on display
   ADD R10, 2                            ; go to next character
@@ -875,7 +878,7 @@ displayFoodTable:
   MOV R2, DISPLAY_POSITION_SEVEN
   MOV R3, DISPLAY_END
   MOV R4, changeFoodInfoMenu            ; display menu of 1 line with options to choose food
-displayLCTLoop: ; what?
+displayLCTLoop:
   MOV R5, [R4]                          ; place in R5 the line with the menu options
   MOV [R2], R5                          ; place in the LAST line the menu options (from R5)
   ADD R2, 2                             ; go to right
