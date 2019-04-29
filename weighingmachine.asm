@@ -936,28 +936,28 @@ readOKButton:
   PUSH R1
   PUSH R2
 readOKButtonLoop:
-  MOV R1, OK
+  MOV R1, OK                            ; send OK input value to R1
   MOVB R1, [R1]
-  MOV R2, NUMBER_ONE_ASCII
-  CMP R1, R2
-  JNE readOKButtonLoop
+  MOV R2, NUMBER_ONE_ASCII              ; send 1 in ASCII format to R2
+  CMP R1, R2                            ; compare OK value with 1
+  JNE readOKButtonLoop                  ; if the above is true, repeat loop (OK hasn't been pressed)
   POP R2
   POP R1
   RET
 
 readONOFFButton:
   PUSH R1
-  MOV R3, ONOFF
+  MOV R3, ONOFF                         ; send ONOFF input value to R3
   MOVB R3, [R3]
-  MOV R1, NUMBER_ZERO_ASCII
-  CMP R3, R1
-  JNE doNotTurnOffMachine
-  MOV R3, 1
+  MOV R1, NUMBER_ZERO_ASCII             ; send 0 in ASCII format to R1
+  CMP R3, R1                            ; compare ONOFF value with 0
+  JNE doNotTurnOffMachine               ; if the above is true, jump to NOT turn off machine
+  MOV R3, 1                             ; R3 has got 1 (control register to shutdown machine)
   POP R1
   RET
 
 doNotTurnOffMachine:
-  MOV R3, 0
+  MOV R3, 0                             ; R3 has got 0 (control register to NOT shutdown machine)
   POP R1
   RET
 
@@ -1024,22 +1024,25 @@ readFoodChosen:
   PUSH R2
   PUSH R3
 readFoodChosenLoop:
-  MOV R3, UNDERSCORE_CHARACTER
-  MOV R0, SEL_NR_MENU
+  MOV R3, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R3
+  MOV R0, SEL_NR_MENU                   ; send SEL input value to R0
   MOVB R1, [R0]
-  CMP R1, R3
-  JZ readFoodChosenLoop
-  ADD R0, 1
-  MOVB R1, [R0]
-  CMP R1, R3
-  JZ readFoodChosenLoop
-  MOV R0, SEL_NR_MENU
+  CMP R1, R3                            ; compare SEL with _
+  JZ readFoodChosenLoop                 ; if the above is true, repeat loop
+  ADD R0, 1                             ; otherwise, sum 1 to SEL
+  MOVB R1, [R0]                         ; send SEL input value to R1
+  CMP R1, R3                            ; compare SEL with _
+  JZ readFoodChosenLoop                 ; if the above is true, repeat loop
+  MOV R0, SEL_NR_MENU                   ; otherwise, send SEL input to R0
 
-  MOV R1, [R0]
-  MOV R2, OPTION_OATS
-  MOV R10, NAME_OATS
-  CMP R1, R2
-  JZ FoodChoiceDoneINTERMEDIATEJUMP
+  MOV R1, [R0]                          ; send SEL value to R1
+
+  ; the code below is all about checking which food the user picked
+
+  MOV R2, OPTION_OATS                   ; get option for oats
+  MOV R10, NAME_OATS                    ; get memory address of oats name
+  CMP R1, R2                            ; compare selected value with oats option value
+  JZ FoodChoiceDoneINTERMEDIATEJUMP     ; if the above is true, jump to finish selection
   MOV R2, OPTION_SLICED_BREAD
   MOV R10, NAME_SLICED_BREAD
   CMP R1, R2
@@ -1116,7 +1119,7 @@ readFoodChosenLoop:
   MOV R10, NAME_WHITE_FISH
   CMP R1, R2
   JZ FoodChoiceDone
-FoodChoiceDoneINTERMEDIATEJUMP:         ; INTERMEDIATE JUMP
+FoodChoiceDoneINTERMEDIATEJUMP:         ; INTERMEDIATE JUMP DUE TO LIMITATIONS OF PEPE
   CMP R1, R2
   JZ FoodChoiceDone
   MOV R2, OPTION_TUNA
@@ -1144,10 +1147,10 @@ FoodChoiceDoneINTERMEDIATEJUMP:         ; INTERMEDIATE JUMP
   CMP R1, R2
   JZ FoodChoiceDone
 InvalidFoodChoice:
-  MOV R0, SEL_NR_MENU
-  MOV R3, DOUBLE_UNDERSCORE_CHARACTER
-  MOV [R0], R3
-  JMP readFoodChosenLoop
+  MOV R0, SEL_NR_MENU                   ; send SEL input value to R0
+  MOV R3, DOUBLE_UNDERSCORE_CHARACTER   ; send __ in ASCII format to R3
+  MOV [R0], R3                          ; send __ to SEL input value
+  JMP readFoodChosenLoop                ; repeat loop waaaay above
 FoodChoiceDone:
   POP R3
   POP R2
