@@ -184,6 +184,7 @@ viewTotalDataMenu:
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 ; food info displayed
+; protein carbohydrates fats
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 PLACE 2000H
@@ -878,6 +879,11 @@ displayFoodTable:
   MOV R2, DISPLAY_POSITION_SEVEN
   MOV R3, DISPLAY_END
   MOV R4, changeFoodInfoMenu            ; display menu of 1 line with options to choose food
+
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+; draw last line of display when on register mode
+; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 displayLCTLoop:
   MOV R5, [R4]                          ; place in R5 the line with the menu options
   MOV [R2], R5                          ; place in the LAST line the menu options (from R5)
