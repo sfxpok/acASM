@@ -487,7 +487,7 @@ saveMacronutrientsOfChosenFood:
   MOV R3, R10                           ; moves the end of the value to R3
   MOV R2, NUMBER_ZERO_ASCII             ; moves 0 in ASCII to subtract
 
-  MOVB R3, [R3]
+  MOVB R3, [R3]                         ; hundreds
   SUB R3, R2                            ; subtract 0 to pass ASCII to hexadecimal
   MOV R1, 100                           ; send 100 to R1
   MUL R3, R1                            ; multiply to get the value in the hundreds
