@@ -43,14 +43,14 @@ TOTAL_FATS                  EQU 0DA8H   ; total consumed fats
 ; memory addresses to display the machine screen
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-DISPLAY_START               EQU 0000H    ; position to start the display
-DISPLAY_POSITION_TWO        EQU 0010H    ; position two of the display
-DISPLAY_POSITION_THREE      EQU 0020H    ; position three of the display
-DISPLAY_POSITION_FOUR       EQU 0030H    ; position four of the display
-DISPLAY_POSITION_FIVE       EQU 0040H    ; position five of the display
-DISPLAY_POSITION_SIX        EQU 0050H    ; position six of the display
-DISPLAY_POSITION_SEVEN      EQU 0060H    ; position seven of the display
-DISPLAY_END                 EQU 0070H    ; position to end the display
+DISPLAY_START               EQU 0000H   ; position to start the display
+DISPLAY_POSITION_TWO        EQU 0010H   ; position two of the display
+DISPLAY_POSITION_THREE      EQU 0020H   ; position three of the display
+DISPLAY_POSITION_FOUR       EQU 0030H   ; position four of the display
+DISPLAY_POSITION_FIVE       EQU 0040H   ; position five of the display
+DISPLAY_POSITION_SIX        EQU 0050H   ; position six of the display
+DISPLAY_POSITION_SEVEN      EQU 0060H   ; position seven of the display
+DISPLAY_END                 EQU 0070H   ; position to end the display
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 ; options for food names
@@ -425,7 +425,7 @@ registerFoodDiary:
   CMP R0, R1                            ; check if CHANGE input button is active
   JZ saveData                           ; jump to saveData if the above is true
 
-saveData: ; CMTabela
+saveData:
   CALL displayFoodTable                 ; send food table to display
   CALL readFoodChosen                   ; reads food chosen (stored in R3)
   CALL readOKButton                     ; read OK input
@@ -684,7 +684,7 @@ doNotRoundCarb:
   JLT doNotRoundFats                    ; if R5 is below 50 it does not need rounding
   ADD R4, 1                             ; if it is above 50, add 1 to the integer part of the division (R4)
 
-doNotRoundFats: ; NArrGord
+doNotRoundFats:
   ADD R1, R4                            ; sum the integer part of the division (with rounding, if applicable)
   JC EndCarry                           ; jump and set R5 to 1 if there is carry
   JV EndCarry                           ; jump and set R5 to 1 if there is overflow
@@ -916,7 +916,7 @@ displayReadNextPageLoop:
   CMP R6, R7                            ; check if input peripheral is 0
   JZ endChooseFood                      ; if the above is true, it means we have picked the food
   JNE displayReadNextPageLoop           ; otherwise, repeat the loop
-endChooseFood: ; ciclofimpg
+endChooseFood:
   POP R7
   POP R6
   POP R5
@@ -971,7 +971,6 @@ doNotTurnOffMachine:
   RET
 
 drawDisplay:
-  ;PUSH R0
   PUSH R1
   PUSH R2
   PUSH R3
@@ -987,11 +986,9 @@ drawDisplayLoop:
   POP R3
   POP R2
   POP R1
-  ;POP R0
   RET
 
 wipeDisplay:
-  ;PUSH R0
   PUSH R1
   PUSH R2
   PUSH R3
@@ -1006,7 +1003,6 @@ wipeDisplayLoop:
   POP R3
   POP R2
   POP R1
-  ;POP R0
   RET
 
 wipePeripherals:
