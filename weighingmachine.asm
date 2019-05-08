@@ -27,7 +27,7 @@ UNDERSCORE_CHARACTER        EQU 5FH
 DOUBLE_UNDERSCORE_CHARACTER EQU 5F5FH
 NUMBER_ZERO_ASCII           EQU 30H     ; 0 in ASCII
 NUMBER_ONE_ASCII            EQU 31H     ; 1 in ASCII
-TIME_CONSTANT               EQU 250H    ; meant to be used for the timer to countdown
+TIME_CONSTANT               EQU 9000H   ; meant to be used for the timer to countdown
 END_FOOD_TABLE              EQU 2340H   ; memory address of the end of the food table
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -935,7 +935,7 @@ readSELButtonLoop:
   MOVB R1, [R1]
   MOV R2, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R2
   CMP R1, R2                            ; compares SEL value with _
-  JZ readSELButton                      ; if the above is 0, it means there is no input
+  JZ readSELButtonLoop                  ; if the above is 0, it means there is no input
   MOV R0, R1                            ; R0 keeps the SEL input
   POP R2
   POP R1
