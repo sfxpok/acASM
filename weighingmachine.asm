@@ -27,7 +27,7 @@ UNDERSCORE_CHARACTER        EQU 5FH
 DOUBLE_UNDERSCORE_CHARACTER EQU 5F5FH
 NUMBER_ZERO_ASCII           EQU 30H     ; 0 in ASCII
 NUMBER_ONE_ASCII            EQU 31H     ; 1 in ASCII
-TIME_CONSTANT               EQU 9000H   ; meant to be used for the timer to countdown
+TIME_CONSTANT               EQU 250H    ; meant to be used for the timer to countdown
 END_FOOD_TABLE              EQU 2340H   ; memory address of the end of the food table
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -87,32 +87,32 @@ OPTION_CHEESE               EQU 3235H   ; option to choose cheese
 ; memory addresses of food names
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-NAME_OATS                   EQU 4000H   ; memory address of oats
-NAME_SLICED_BREAD           EQU 4020H   ; memory address of sliced bread
-NAME_POTATOES               EQU 4040H   ; memory address of potatoes
-NAME_RICE                   EQU 4060H   ; memory address of rice
-NAME_BEANS                  EQU 4080H   ; memory address of beans
-NAME_VEGETABLES             EQU 40A0H   ; memory address of vegetables
-NAME_TOMATO                 EQU 40C0H   ; memory address of tomato
-NAME_BANANA                 EQU 40E0H   ; memory address of banana
-NAME_ORANGE                 EQU 4100H   ; memory address of orange
-NAME_APPLE                  EQU 4120H   ; memory address of apple
-NAME_KIWI                   EQU 4140H   ; memory address of kiwi
-NAME_CHOCOLATE_COOKIE       EQU 4160H   ; memory address of chocolate cookie
-NAME_PIZZA                  EQU 4180H   ; memory address of pizza
-NAME_ALMONDS                EQU 41A0H   ; memory address of almonds
-NAME_LINSEED                EQU 41C0H   ; memory address of linseed
-NAME_OLIVE_OIL              EQU 41E0H   ; memory address of olive oil
-NAME_SKIM_MILK              EQU 4200H   ; memory address of skim milk
-NAME_WHEY                   EQU 4220H   ; memory address of whey
-NAME_SALMON                 EQU 4240H   ; memory address of salmon
-NAME_WHITE_FISH             EQU 4260H   ; memory address of white fish
-NAME_TUNA                   EQU 4280H   ; memory address of tuna
-NAME_PORK                   EQU 42A0H   ; memory address of pork
-NAME_CHICKEN                EQU 42C0H   ; memory address of chicken
-NAME_TURKEY                 EQU 42E0H   ; memory address of turkey
-NAME_EGG                    EQU 4300H   ; memory address of egg
-NAME_CHEESE                 EQU 4320H   ; memory address of cheese
+NAME_OATS                   EQU 2000H   ; memory address of oats
+NAME_SLICED_BREAD           EQU 2020H   ; memory address of sliced bread
+NAME_POTATOES               EQU 2040H   ; memory address of potatoes
+NAME_RICE                   EQU 2060H   ; memory address of rice
+NAME_BEANS                  EQU 2080H   ; memory address of beans
+NAME_VEGETABLES             EQU 20A0H   ; memory address of vegetables
+NAME_TOMATO                 EQU 20C0H   ; memory address of tomato
+NAME_BANANA                 EQU 20E0H   ; memory address of banana
+NAME_ORANGE                 EQU 2100H   ; memory address of orange
+NAME_APPLE                  EQU 2120H   ; memory address of apple
+NAME_KIWI                   EQU 2140H   ; memory address of kiwi
+NAME_CHOCOLATE_COOKIE       EQU 2160H   ; memory address of chocolate cookie
+NAME_PIZZA                  EQU 2180H   ; memory address of pizza
+NAME_ALMONDS                EQU 21A0H   ; memory address of almonds
+NAME_LINSEED                EQU 21C0H   ; memory address of linseed
+NAME_OLIVE_OIL              EQU 21E0H   ; memory address of olive oil
+NAME_SKIM_MILK              EQU 2200H   ; memory address of skim milk
+NAME_WHEY                   EQU 2220H   ; memory address of whey
+NAME_SALMON                 EQU 2240H   ; memory address of salmon
+NAME_WHITE_FISH             EQU 2260H   ; memory address of white fish
+NAME_TUNA                   EQU 2280H   ; memory address of tuna
+NAME_PORK                   EQU 22A0H   ; memory address of pork
+NAME_CHICKEN                EQU 22C0H   ; memory address of chicken
+NAME_TURKEY                 EQU 22E0H   ; memory address of turkey
+NAME_EGG                    EQU 2300H   ; memory address of egg
+NAME_CHEESE                 EQU 2320H   ; memory address of cheese
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 ; display menus
@@ -190,82 +190,82 @@ viewTotalDataMenu:
 PLACE 2000H
 InfoOats:
   STRING "00: Aveia       "
-  STRING "011 056 007     "
+  STRING "011  056  007   "
 InfoSlicedBread:
   STRING "01: Pao de forma"
-  STRING "009 042 003     "
+  STRING "009  042  003   "
 InfoPotatoes:
   STRING "02: Batata      "
-  STRING "003 019 000     "
+  STRING "003  019  000   "
 InfoRice:
   STRING "03: Arroz       "
-  STRING "007 025 000     "
+  STRING "007  025  000   "
 InfoBeans:
   STRING "04: Feijao      "
-  STRING "010 013 000     "
+  STRING "010  013  000   "
 InfoVegetables:
   STRING "05: Legumes     "
-  STRING "003 007 000     "
+  STRING "003  007  000   "
 InfoTomato:
   STRING "06: Tomate      "
-  STRING "001 003 000     "
+  STRING "001  003  000   "
 InfoBanana:
   STRING "07: Banana      "
-  STRING "001 023 000     "
+  STRING "001  023  000   "
 InfoOrange:
   STRING "08: Laranja     "
-  STRING "001 012 000     "
+  STRING "001  012  000   "
 InfoApple:
   STRING "09: Maca        "
-  STRING "001 014 000     "
+  STRING "001  014  000   "
 InfoKiwi:
   STRING "10: Kiwi        "
-  STRING "001 015 000     "
+  STRING "001  015  000   "
 InfoChocolateCookie:
   STRING "11: Bolacha Choc"
-  STRING "009 059 022     "
+  STRING "009  059  022   "
 InfoPizza:
   STRING "12: Pizza       "
-  STRING "013 025 009     "
+  STRING "013  025  009   "
 InfoAlmonds:
   STRING "13: Amendoas    "
-  STRING "025 006 055     "
+  STRING "025  006  055   "
 InfoLinseed:
   STRING "14: Linhacas    "
-  STRING "018 034 036     "
+  STRING "018  034  036   "
 InfoOliveOil:
   STRING "15: Azeite      "
-  STRING "000 000 100     "
+  STRING "000  000  100   "
 InfoSkimMilk:
   STRING "16: Leite Magro "
-  STRING "003 004 000     "
+  STRING "003  004  000   "
 InfoWhey:
   STRING "17: Whey        "
-  STRING "080 008 004     "
+  STRING "080  008  004   "
 InfoSalmon:
   STRING "18: Salmao      "
-  STRING "021 000 015     "
+  STRING "021  000  015   "
 InfoWhiteFish:
   STRING "19: Pescada     "
-  STRING "020 000 001     "
+  STRING "020  000  001   "
 InfoTuna:
   STRING "20: Atum        "
-  STRING "025 000 002     "
+  STRING "025  000  002   "
 InfoPork:
   STRING "21: Porco       "
-  STRING "022 000 015     "
+  STRING "022  000  015   "
 InfoChicken:
   STRING "22: Frango      "
-  STRING "025 000 004     "
+  STRING "025  000  004   "
 InfoTurkey:
   STRING "23: Peru        "
-  STRING "028 000 001     "
+  STRING "028  000  001   "
 InfoEgg:
   STRING "24: Ovo         "
-  STRING "007 000 005     "
+  STRING "007  000  005   "
 InfoCheese:
   STRING "25: Queijo      "
-  STRING "028 000 013     "
+  STRING "028  000  013   "
 
 ; $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 ; instructions
@@ -388,6 +388,7 @@ readCHANGEButtonLoop:
   MOV R2, NUMBER_ZERO_ASCII
   CMP R1, R2                            ; compares 0 in ASCII with CHANGE value
   JZ CHANGEValid                        ; if it is true, it means CHANGE is NOT active
+  ;JZ main
   MOV R1, CHANGE
   MOV R2, UNDERSCORE_CHARACTER
   MOVB [R1], R2                         ; overwrites CHANGE value in display with _
@@ -419,6 +420,11 @@ registerFoodDiary:
   CALL drawDisplay                      ; draw the menu on display
   CALL readCHANGEButton                 ; read CHANGE input
   CALL readONOFFButton                  ; read ONOFF input
+
+  ;CALL readSELButton
+  ;CMP R0, 0
+  ;JNZ main
+
   CMP R3, 1                             ; checks if the machine is actually turned on
   JZ waitForPower                       ; if the machine is not on, jump and standby for power
   MOV R1, NUMBER_ONE_ASCII              ; send 1 in ASCII format to R1
@@ -453,7 +459,7 @@ OverflowWarning:
   CALL wipeDisplay                      ; clean display
   JMP registerFoodDiary                 ; jump back to weight machine
 
-displayChosenFood: ; BUGGY
+displayChosenFood:
   PUSH R1
   PUSH R2
   PUSH R4
@@ -461,7 +467,7 @@ displayChosenFood: ; BUGGY
   MOV R2, DISPLAY_POSITION_FOUR         ; position four of display
   ADD R10, 2                            ; add 2 to R10
   SUB R2, 2                             ; subtract 2 to R2
-displayChosenFoodLoop: ; BUGGY
+displayChosenFoodLoop:
   MOV R4, [R10]                         ; get the food (R3) and save it on R4
   MOV [R1], R4                          ; place the first character on display
   ADD R10, 2                            ; go to next character
@@ -905,7 +911,7 @@ displayNextPageLoop:
   MOV R6, NEXT_PAGE                     ; place on R6 the address of the input peripheral to go to next page
   MOV R7, UNDERSCORE_CHARACTER          ; send _ in ASCII format to R7
   MOVB [R6], R7                         ; place a _ in ASCII format on the value of the address of R7
-  JMP displayFoodTable
+  JMP displayFoodTableLoop
 displayReadNextPageLoop:
   MOV R6, NEXT_PAGE                     ; place on R6 the address of the input peripheral to go to next page
   MOVB R6, [R6]                         ; read the input peripheral value above (NEXT_PAGE)
